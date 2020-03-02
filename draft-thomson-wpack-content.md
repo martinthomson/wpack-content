@@ -259,19 +259,19 @@ use by the content of the bundle.
 A transfer is only possible where a transfer target URL is known for content;
 see {{transfer-target}}.
 
-A user agent MAY request user permission to make a transfer.  This might be
+A user agent MAY request user permission to transfer some state.  This might be
 conditioned on what state is being transferred.  For instance, a user agent
 might prompt before transferring permissions {{PERMISSIONS}}; see
 {{transfer-permissions}}.
 
-After a state transfer is initiated, the user agent retrieves a well-known
-resource on the target origin.  The content of the resource is hashed (as in
-{{content-origin}} and the resulting value is hashed again.  This is formed into
-a Sec-Content-Origin header field that is added to a request for the transfer
-target URL.  If the response contains the hash of the content (that is, the
-pre-image of the value from the request) in the same header field, the server
-indicates willingness to receive the transfer and also demonstrates knowledge of
-the contents of the content.
+After a state transfer is initiated, the user agent fetches the transfer target
+URL.  The source content is hashed twice; once as described in
+{{content-origin}} with the resulting value is hashed again.  The doubly-hashed
+value is encoded into a Sec-Content-Origin header field and added to the request
+for the transfer target URL.  If a Sec-Content-Origin header field in the
+response contains the hash of the content (that is, the pre-image of the value
+from the request), that indicates that the server is both willing to receive the
+transfer and that the server knows the content.
 
 The value of the Sec-Content-Origin header field is expressed as a structured
 header {{!SH=I-D.ietf-httpbis-header-structure}} dictionary with keys being the
@@ -286,6 +286,9 @@ content does not hash to the any provided value, the transfer is unsuccessful.
 
 Note:
 : The response to a state transfer can be served from cache.
+
+
+## Successful Transfer
 
 If the transfer is successful, state associated with the content-based origin
 will be transferred to the target origin.  The user agent MAY either remember
@@ -310,6 +313,9 @@ Sec-Content-Origin:
 
 A user agent that automatically follows redirections (3xx status codes) MUST
 allow the server to redirect to a resource that provides the response.
+
+
+## Unsuccessful Transfer
 
 A transfer can be unsuccessful in two ways.  If the target origin cannot be
 contacted successfully, the content-based origin continues to exist.  Any API
@@ -337,29 +343,25 @@ content-based origin to be cleared as though clear-site-data were invoked
 
 ## Transfer Target {#transfer-target}
 
-Content that makes a commitment to transfer to a particular origin enables
-transfer of state to that origin.  It does so by identifying the URL of a target
-resource to load.  After a transfer is successfully completed, the user agent
-loads the transfer target URL.
-
-To enable transfer, a bundle MUST include an attribute (encoding TBD) that
-indicates the transfer target URL.  The origin of the transfer target URL is the
-target origin.  Only the target origin can be the ultimate recipient of the
-content.
+To enable transfer, content MUST include an attribute that indicates the
+transfer target URL.  The origin of the transfer target URL is the target
+origin.  Only the target origin can be the target of a state transfer.  After a
+successful transfer, the user agent loads the transfer target URL.
 
 Note:
-: Altering the transfer target URL will cause the content hash to assume a new
-  value, thereby generating a new content-based origin.  Two different origins
-  cannot share state.
+: Including the transfer target URL in content means that altering the value
+  will cause the content hash to assume a new value.  This generates a new
+  content-based origin.  Two different origins cannot share state.
 
 A commitment in this form allows user agents to present the target origin in
 interfaces.  While no strong assurances can be made about the attribution of
 content to this origin, this might make it easier to generate user interfaces.
 
-Different content types might provide a way of encoding this URL.  The URL might
-be provided external to the content, but this requires unspecified means of
-ensuring that the content-based origin depends on the value of the URL; this
-document only supports content that can encode the transfer target URL.
+Different content types might provide a way of encoding the transfer target URL.
+The URL could be provided external to the content, but this requires some
+unspecified means of ensuring that the content-based origin depends on the value
+of the URL; this document only supports content that can encode the transfer
+target URL.
 
 
 ## State Transfer
@@ -372,7 +374,8 @@ transferred.
 
 Upon successful completion of transfer, if loading the transfer target resource
 produces an HTML document, an event is delivered to content of that resource
-that describes what information was transferred.
+that describes what information was transferred.  \[\[TBD: The form of the
+event.]]
 
 
 ### Transfer of Content {#transfer-content}
@@ -385,9 +388,9 @@ from the bundle if the Subresource Integrity hash {{SRI}} matches.  This avoids
 the negative effects described in {{SRI-ADDRESSABLE}} as the target origin is
 required to demonstrate knowledge of the contents of the bundle.
 
-Though a bundle count contain content that is ordinarily available from origins
+Though a bundle could contain content that is ordinarily available from origins
 other than the target origin, content from other origins MUST NOT be loaded from
-the bundle in place of making the request directly.
+the bundle in place of making the request to those other origins directly.
 
 A server might use the Digest header field
 {{?DIGEST=I-D.ietf-httpbis-digest-headers}} to indicate that content matches
