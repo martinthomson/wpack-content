@@ -296,17 +296,17 @@ For example, assuming that a single 'a' character is valid content, then the
 client would include the following in a request (line breaks are added to
 examples for formatting reasons):
 
-```
+~~~
 Sec-Content-Origin:
   sha-256=:v106/7c+/S7Gw2rTES3ZM+/tY8Thy//PqI4nWcFE8tg=:
-```
+~~~
 
 A successful state transfer would occur if the server indicated:
 
-```
+~~~
 Sec-Content-Origin:
   sha-256=:ypeBEsobvcr6wjGzmiPcTaeG7/gUfE5yuYB3ha/uSLs=:
-```
+~~~
 
 A user agent that automatically follows redirections (3xx status codes) MUST
 allow the server to redirect to a resource that provides the response.
