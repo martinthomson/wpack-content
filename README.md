@@ -1,10 +1,10 @@
-# Content Origins for Web Packages
+# Content-Based Origins for the Web
 
-This is the working area for the individual Internet-Draft, "Content Origins for Web Packages".
+This is the working area for the individual Internet-Draft, "Content-Based Origins for the Web".
 
-* [Editor's Copy](https://martinthomson.github.io/wpack-content/#go.draft-thomson-wpack-content.html)
-* [Individual Draft](https://tools.ietf.org/html/draft-thomson-wpack-content)
-* [Compare Editor's Copy to Individual Draft](https://martinthomson.github.io/wpack-content/#go.draft-thomson-wpack-content.diff)
+* [Editor's Copy](https://martinthomson.github.io/wpack-content/#go.draft-thomson-wpack-content-origin.html)
+* [Individual Draft](https://tools.ietf.org/html/draft-thomson-wpack-content-origin)
+* [Compare Editor's Copy to Individual Draft](https://martinthomson.github.io/wpack-content/#go.draft-thomson-wpack-content-origin.diff)
 
 ## Building the Draft
 
