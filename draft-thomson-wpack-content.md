@@ -365,6 +365,13 @@ As transferrance is a one-time event, causing prompts to be reinitiated might
 not be too much of an imposition.
 
 
+## Transfer on Navigation
+
+Initiating transfer on navigation enables pre-loading of content from bundles.
+
+TODO: use headers for transfer.  Revise other parts of the design as needed.
+
+
 ## Communication Between Origins
 
 Without knowledge of the content of a resource, or bundle of resources, a
