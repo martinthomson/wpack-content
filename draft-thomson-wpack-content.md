@@ -188,7 +188,7 @@ string "ni:///", the identifier for the hash algorithm (see Section 9.4 of
 output.  Though this uses the ni URL form, the authority and query strings are
 omitted from this serialization.
 
-For instance, the origin of content comprising the single ASCII character "a" is
+For instance, the origin of content comprising the single ASCII character 'a' is
 represented as `ni:///sha-256;ypeBEsobvcr6wjGzmiPcTaeG7_gUfE5yuYB3ha_uSLs`.
 
 In tuple form, the origin is comprised of the scheme ("ni") and a host equal to
@@ -240,7 +240,7 @@ incoming messages.
 For the purposes of determining equality, user agents might consider hashes of
 the same content with different hash algorithms to be equal.  For instance, a
 user agent might consider `sha-256:ypeBEsobvcr6wjGzmiPcTaeG7_gUfE5yuYB3ha_uSLs`
-to be regarded as equal to `sha-384;VKWbnyKwuAiA2EJ-VIt8I6vYc0huHwNd
+to be equal to `sha-384;VKWbnyKwuAiA2EJ-VIt8I6vYc0huHwNd
 zpzWl-hRdQM8qojm1XvDXvrgta_TFF8x` (note space added to meet formatting
 constraints).  This requires that this equivalence is known to the user agent.
 
