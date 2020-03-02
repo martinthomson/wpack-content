@@ -1,6 +1,6 @@
 ---
-title: "Content Origins for Web Packages"
-abbrev: "Content Origins"
+title: "Content-Based Origins for the Web"
+abbrev: "Content-Based Origins"
 docname: draft-thomson-wpack-content-latest
 category: std
 updates: 6454
