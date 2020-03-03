@@ -229,13 +229,12 @@ This design depends to some extent on the hash algorithm remaining constant
 during the time that the content-based origin is used.  A change in hash
 algorithm changes the identity of the resource.
 
-It is possible to silently transfer state from a content-based origin derived
-using one hash algorithm to another without affecting the content of the origin
-itself.  It is not often that content depends on knowing its own identity.
-However, the identity of the origin might be made visible to other origins.  For
-instance, the window.postMessage API {{HTML}} allows content to target a
-specific origin for sending messages and to identify the source origin of
-incoming messages.
+It is possible to transfer state from a content-based origin derived using one
+hash algorithm to another without affecting the content of the origin itself.
+It is not often that content depends on knowing its own identity.  However, the
+identity of the origin might be made visible to other origins.  For instance,
+the window.postMessage API {{HTML}} allows content to target a specific origin
+for sending messages and to identify the source origin of incoming messages.
 
 For the purposes of determining equality, user agents might consider hashes of
 the same content with different hash algorithms to be equal.  For instance, a
@@ -258,11 +257,6 @@ use by the content of the bundle.
 
 A transfer is only possible where a transfer target URL is known for content;
 see {{transfer-target}}.
-
-A user agent MAY request user permission to transfer some state.  This might be
-conditioned on what state is being transferred.  For instance, a user agent
-might prompt before transferring permissions {{PERMISSIONS}}; see
-{{transfer-permissions}}.
 
 After a state transfer is initiated, the user agent fetches the transfer target
 URL.  The source content is hashed twice; once as described in
@@ -377,20 +371,34 @@ produces an HTML document, an event is delivered to content of that resource
 that describes what information was transferred.  \[\[TBD: The form of the
 event.]]
 
+A user agent MAY request user permission to transfer some state.  This might be
+conditioned on what state is being transferred.  For instance, a user agent
+might prompt before transferring permissions {{PERMISSIONS}}; see
+{{transfer-permissions}}.
+
 
 ### Transfer of Content {#transfer-content}
 
 A bundle contains multiple resources that might be usable by the origin to which
-state is transferred.  Rather than require that content
+state is transferred.  Content that would otherwise be requested from the
+target origin can be loaded instead from the bundle.  However, this is only
+possible for content loaded by the target origin.
 
 For content on the origin to which state was transferred, content MAY be loaded
-from the bundle if the Subresource Integrity hash {{SRI}} matches.  This avoids
-the negative effects described in {{SRI-ADDRESSABLE}} as the target origin is
-required to demonstrate knowledge of the contents of the bundle.
+from the bundle based on a hash of the content.  Links to resources from the
+target origin that include a Subresource Integrity attribute {{SRI}} can be
+loaded if the content matches the `metadataList` derived from the integrity
+attribute.  This avoids the negative effects described in {{SRI-ADDRESSABLE}} as
+the target origin is required to demonstrate knowledge of the contents of the
+bundle.
 
-Though a bundle could contain content that is ordinarily available from origins
-other than the target origin, content from other origins MUST NOT be loaded from
-the bundle in place of making the request to those other origins directly.
+A bundle could contain content that is ordinarily available from origins other
+than the target origin.  Content from other origins MAY be loaded by the target
+origin using the bundle in place of making the request to those other origins
+directly.
+
+Content loaded from a bundle MUST NOT be cached for use by origins other than
+the target origin.
 
 A server might use the Digest header field
 {{?DIGEST=I-D.ietf-httpbis-digest-headers}} to indicate that content matches
@@ -461,8 +469,8 @@ transferrance might occur.
 
 Without knowledge of the content of a resource, or bundle of resources, a
 content-based origin will be impossible to guess.  This means that communication
-is only possible if the frame in which the content is loaded is known to an
-origin that attempts communication.
+is only possible if the frame in which the content is loaded by the origin
+attempting communication, or the content is known to that origin.
 
 
 # Security Considerations
