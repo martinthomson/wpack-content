@@ -28,6 +28,7 @@ informative:
     seriesinfo:
       W3C: ED
     date: 2017-11-13
+    target: "https://w3c.github.io/webappsec-clear-site-data/"
     author:
       -
         name: Mike West
@@ -37,7 +38,8 @@ informative:
     title: "HTML"
     seriesinfo:
       WhatWG: Living Standard
-    date: 2020
+    date: 2020-03-04
+    target: "https://html.spec.whatwg.org/"
     author:
       -
         ins: WhatWG
@@ -48,6 +50,7 @@ informative:
     seriesinfo:
       W3C: ED
     date: 2020-02-29
+    target: "https://w3c.github.io/IndexedDB/"
     author:
       -
         name: Ali Alabbas
@@ -56,11 +59,21 @@ informative:
         name: Joshua Bell
         organization: Google
 
+  LOADING:
+    title: "Loading Signed Exchanges"
+    date: 2020-02-21
+    target: "https://wicg.github.io/webpackage/loading.html"
+    author:
+      -
+        name: Jeffrey Yasskin
+        organization: Google
+
   PERMISSIONS:
     title: "Permissions"
     seriesinfo:
       W3C: ED
     date: 2019-10-30
+    target: "https://w3c.github.io/permissions/"
     author:
       -
         name: Mounir Lamouri
@@ -72,11 +85,32 @@ informative:
         name: Jeffrey Yasskin
         organization: Google
 
+  SERVICE-WORKERS:
+    title: "Service Workers 1"
+    seriesinfo:
+      W3C: ED
+    date: 2020-02-24
+    target: "https://w3c.github.io/ServiceWorker/v1/"
+    author:
+      -
+        name: Alex Russell
+        organization: Google
+      -
+        name: Jungkee Song
+        organization: Microsoft
+      -
+        name: Jake Archibald
+        organization: Google
+      -
+        name: Marijn Kruisselbrink
+        organization: Google
+
   SRI:
     title: "Subresource Integrity"
     seriesinfo:
       W3C: ED
     date: 2020-01-04
+    target: "https://w3c.github.io/webappsec-subresource-integrity/"
     author:
       -
         name: Devdatta Akhawe
@@ -94,10 +128,21 @@ informative:
   SRI-ADDRESSABLE:
     title: "Subresource Integrity Addressable Caching"
     date: 2016-10-15
+    target: "https://hillbrad.github.io/sri-addressable-caching/sri-addressable-caching.html"
     author:
       -
         name: Brad Hill
         organization: Facebook
+
+  UNSIGNED:
+    title: "Navigation to Unsigned Web Bundles"
+    date: 2020-02-20
+    target: "https://github.com/WICG/webpackage/blob/master/explainers/navigation-to-unsigned-bundles.md"
+    author:
+      -
+        name: Jeffrey Yasskin
+        organization: Google
+
 
 
 --- abstract
@@ -169,6 +214,127 @@ This document uses the term "user agent" consistent with the usage in both
 {{!HTTP}} and {{HTML}}.  Colloquially, "user agent" is a web browser.
 
 
+## Overview and Comparisons
+
+This section provides an overview of how these tools might be used. This
+section compares designs.
+
+The most interesting scenario is understanding the transition from an state
+where the target origin has not been contacted (that is, the user agent is
+effectively offline), to one where the user agent contacts the target origin
+(the user agent is online).
+
+
+### Offline-to-Online Transition for Content-Based Origins
+
+In this proposal, content is loaded from a bundle. After loading the bundle,
+the browser treats content in the bundle as existing in an origin unique to the
+content of the bundle; see {{content-origin}}.
+
+If the bundle contains a transfer target URL (see {{transfer-target}}), the
+browser then attempts to load that resource, providing an indication to the
+target origin that a transfer from the content-based origin is possible. If the
+origin accepts the transfer of state, state is transferred from the
+content-based origin to the target origin. This sequence is shown in
+{{ex-cbo}}.
+
+~~~
+               +---------------+
+               |  Load Bundle  |
+               +---------------+
+                       |
+                       v
+               +---------------+       +---------+
+ Aborted +-----| Content-Based |=======|  State  |
+Transfer +---->|    Origin     |       +---------+
+               +---------------+            :
+                       |  State Transfer    :
+                       | IFF Origin Accepts :
+                       v                    v
+               +---------------+       +---------+
+               |   Online at   |=======|  State  |
+               | Target Origin |       +---------+
+               +---------------+
+~~~
+{: #ex-cbo title="State Transfer for Content-Based Origins"}
+
+Failure to connect to the target origin - such as when the browser has no
+active Internet connection - causes the redirect to be aborted. The browser
+continues to display the bundle content.
+
+If the origin does not accept the transfer, the browser shows content from the
+target origin and any state from the bundle is destroyed.
+
+
+### Offline-to-Online Transition for Signed Exchanges
+
+With {{LOADING}} and {{!SXG=I-D.yasskin-http-origin-signed-responses}}, content
+is loaded from a signed bundle. After loading the bundle, if the signature is
+considered valid, the browser stores bundled content in a cache that is
+specific to the target origin. The browser then redirects to the request (or
+target) URL from the bundle. The browser uses content from the bundle in place
+of fetching from the origin.  This is illustrated in {{ex-sxg}}.
+
+~~~
+    +-----------------+
+    |   Load Bundle   |
+    +-----------------+
+            |             ..If signature is trusted...
+            v             :                          :
+    +-----------------+   :   +-----------------+    :
+    | Check Signature +------>| Store Exchanges |    :
+    +-----------------+   :   +-----------------+    :
+  Redirect  |             :                          :
+            v             :                          :
+    +-----------------+   :   +-----------------+    :
+    |    Online at    |<------|  Use Exchanges  |    :
+    |   Request URL   |   :   +-----------------+    :
+    +-----------------+   :...........................
+~~~
+{: #ex-sxg title="Content Use with Signed Exchanges"}
+
+Having signed content from the bundle allows use of that content prior to
+connecting to the origin. Importantly, it allows attribution of any operations
+to that origin. Optimizations that otherwise might not be possible are enabled
+because resources from the bundle can be treated as if they were loaded from
+the target origin, but the browser does not need to make a request to the
+origin.
+
+Critically, if the browser is fully offline, it can decide to operate with the
+bundle without having to connect to the origin. If the bundled content is
+signed and trusted, the application to operate offline. Any actions performed
+act on state for the target origin.
+
+Note:
+: While Service Workers {{SERVICE-WORKERS}} can offer a similar experience,
+  they require that the browser be online initially to load the service worker
+  script. This design requires no prior interaction with the target origin.
+
+Failure to validate a signature causes a redirect to an online location. If the
+client is offline, that origin will be inaccessible. If the client is online,
+none of the optimizations afforded by the bundle are available and this appears
+to be a normal redirection.
+
+\[\[Note that it is unclear whether a browser might be able to fall back to
+treating a signed bundle as unsigned if the signature is bad.]]
+
+
+### Comparison with Unsigned Bundles
+
+Unsigned bundles {{UNSIGNED}} proposes a model whereby bundles served by a
+given origin could be declared to be part of that origin and trusted. Unsigned
+bundles would otherwise be considered untrusted and would be isolated in some
+fashion. This is similar to the way in which a content-based origin might be
+transferred to a target origin.
+
+That proposal divides bundles into trusted and untrusted bundles. Trusted
+bundles would be able to access state from the origin that served them.
+
+In comparison, content-based origins would always be used for bundles and the
+distinction between trusted and untrusted is unnecessary. Content from the
+bundle would be usable to a target origin that accepts a state transfer.
+
+
 # Content-Based Origin Definition {#content-origin}
 
 A content-based origin ascribes an identity to content based on the content
@@ -198,9 +364,11 @@ origin in this form.
 
 Design Note:
 : This design currently assumes that there won't be a hash-based URI scheme
-  developed for bundles.  There is some advantage in having a URI scheme for
-  bundled content, especially if that could support this use case.  For
-  instance, state transfer could be initiated *toward* another bundle.
+  developed for bundles.  There is an advantage to having a URI scheme for
+  bundled content.  It would then be possible to reference content in a bundle
+  from outside the bundle, and internal references could be canonicalized. As an
+  potentially curious outcome, state transfer could also be initiated *toward*
+  another bundle.
 
 This definition of origin for named information (`ni://`) URIs extends the
 definition of origin in Section 4 of {{!ORIGIN}}.
@@ -330,7 +498,7 @@ fail.
 After a valid HTTP response, the user agent navigates to the transfer target URL
 or any resource that was included in any redirections.
 
-Any valid HTTP response, successful or not, MAY cause data associated with the
+Any valid HTTP response, successful or not, MUST cause data associated with the
 content-based origin to be cleared as though clear-site-data were invoked
 {{CLEAR-DATA}}.
 
@@ -338,9 +506,16 @@ content-based origin to be cleared as though clear-site-data were invoked
 ## Transfer Target {#transfer-target}
 
 To enable transfer, content MUST include an attribute that indicates the
-transfer target URL.  The origin of the transfer target URL is the target
-origin.  Only the target origin can be the target of a state transfer.  After a
-successful transfer, the user agent loads the transfer target URL.
+transfer target URL. If a bundle could contain multiple potential entry points,
+each entry point for the bundle would separately specify a different transfer
+target URL.
+
+A transfer target URL does not need to be specified if the intent is to never
+support the ability to transfer to an online state.
+
+The origin of the transfer target URL is the target origin. Only
+the target origin can be the target of a state transfer. After a successful
+transfer, the user agent loads the transfer target URL.
 
 Note:
 : Including the transfer target URL in content means that altering the value
@@ -436,7 +611,7 @@ As transferrance is a one-time event, causing prompts to be reinitiated might
 not be too much of an imposition.
 
 
-## Navigation Transfers
+## Navigation Transfers {#navigation}
 
 Initiating transfer on navigation enables pre-loading of content from bundles.
 
@@ -445,10 +620,14 @@ might be served from the site providing the link to ensure that information
 about the linking page is not revealed to the target origin prior to navigation.
 
 Navigating to the bundle causes an immediate load of the content of the bundle.
-Once the transfer target URL is known, the user agent navigates to that URL.
-The user agent MUST fetch the transfer target URL and include a
-Sec-Content-Origin header field in the request as described in {{transfer}}.
-This request MAY also include the ETag header field from the bundled content.
+This assumes that there is either a URL component that specifies a single entry
+point for the bundle or that the bundle itself identifies the entrypoint.
+
+If a transfer target URL is specified for the target resource, the user agent
+navigates to that URL. The user agent MUST fetch the transfer target URL and
+include a Sec-Content-Origin header field in the request as described in
+{{transfer}}. This request MAY also include the ETag header field from the
+bundled content.
 
 The resource at the transfer target URL might return a 304 (Not Modified) status
 code in response to a request that contains a Sec-Content-Origin header field if
