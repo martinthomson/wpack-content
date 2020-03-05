@@ -394,11 +394,11 @@ origin in this form.
 
 Design Note:
 : This design currently assumes that there won't be a hash-based URI scheme
-  developed for bundles.  There is an advantage to having a URI scheme for
-  bundled content.  It would then be possible to reference content in a bundle
-  from outside the bundle, and internal references could be canonicalized. As an
-  potentially curious outcome, state transfer could also be initiated *toward*
-  another bundle.
+  developed for bundles.  It would be vastly preferable to have a URI scheme
+  for bundled content.  It would then be possible to reference content in a
+  bundle from outside the bundle, and internal references could be
+  canonicalized. Importantly, state transfer could also be initiated *toward*
+  another bundle.  That could be useful for upgrading bundles.
 
 This definition of origin for named information (`ni://`) URIs extends the
 definition of origin in Section 4 of {{!ORIGIN}}.
