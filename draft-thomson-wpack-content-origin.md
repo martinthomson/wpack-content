@@ -214,18 +214,18 @@ This document uses the term "user agent" consistent with the usage in both
 {{!HTTP}} and {{HTML}}.  Colloquially, "user agent" is a web browser.
 
 
-## Overview and Comparisons
+# Overview and Comparisons
 
 This section provides an overview of how these tools might be used. This
 section compares designs.
 
 The most interesting scenario is understanding the transition from an state
 where the target origin has not been contacted (that is, the user agent is
-effectively offline), to one where the user agent contacts the target origin
-(the user agent is online).
+either offline or effectively so), to one where the user agent contacts the
+target origin (the user agent is online).
 
 
-### Offline-to-Online Transition for Content-Based Origins
+## Offline-to-Online Transition for Content-Based Origins
 
 In this proposal, content is loaded from a bundle. After loading the bundle,
 the browser treats content in the bundle as existing in an origin unique to the
@@ -266,7 +266,7 @@ If the origin does not accept the transfer, the browser shows content from the
 target origin and any state from the bundle is destroyed.
 
 
-### Offline-to-Online Transition for Signed Exchanges
+## Offline-to-Online Transition for Signed Exchanges
 
 With {{LOADING}} and {{!SXG=I-D.yasskin-http-origin-signed-responses}}, content
 is loaded from a signed bundle. After loading the bundle, if the signature is
@@ -319,7 +319,37 @@ to be a normal redirection.
 treating a signed bundle as unsigned if the signature is bad.]]
 
 
-### Comparison with Unsigned Bundles
+## Comparison with Signed Exchanges
+
+Signed exchanges attempt to address the problem of attributing content to an
+origin.  In effect, they add an object-based security model to the existing
+channel-based model used on the web.  Signatures over bundles (or parts
+thereof) are used by an origin to attest to the contents of a bundle.
+
+Having two security models operate in the same space potentially creates an
+exposure to the worst properties of each model. To reduce the chances that the
+drawbacks of the newly-added object-based model affect existing channel-based
+usages, signed exchanges include a number of hardening measures. In addition to
+signatures, there are required modifications to certificates, constraints on
+validity periods, and a range of limitations on the types of content that can
+be signed.
+
+In comparison, content-based origins do not require signatures. Questions of
+validity only apply at the point that a state transfer is initiated. However,
+this has drawbacks also. Content is not attributed to origins and state is not
+available to an online origin until a transfer is initiated. This avoids the
+complexity inherent to merging two different security models. Additionally, the
+process of state transfer is likely quite complicated in practice.
+
+In terms of usability, the identity attributed to content from a content-based
+origin is opaque and not particularly relatable. Though state might eventually
+be adopted by some origin, communicating the true status of content could be
+challenging. Finally, content-based origins aren't prevented from interacting
+with HTTP origins, which could lead to surprising outcomes if existing code is
+poorly unprepared for this possibility.
+
+
+## Comparison with Unsigned Bundles
 
 Unsigned bundles {{UNSIGNED}} proposes a model whereby bundles served by a
 given origin could be declared to be part of that origin and trusted. Unsigned
@@ -421,18 +451,18 @@ multiple hash algorithms introduces complexity.
 
 In order to transfer state to a target origin, the server for that origin needs
 to be contacted.  Initiating transfer likely requires that an API be defined for
-use by the content of the bundle.
+use by the content of the bundle.  Transfer might be automatically initiated when navigating to a URL from a bundle; see {{navigation}}.
 
 A transfer is only possible where a transfer target URL is known for content;
 see {{transfer-target}}.
 
 After a state transfer is initiated, the user agent fetches the transfer target
 URL.  The source content is hashed twice; once as described in
-{{content-origin}} with the resulting value is hashed again.  The doubly-hashed
+{{content-origin}}; then the resulting value is hashed again.  The twice-hashed
 value is encoded into a Sec-Content-Origin header field and added to the request
 for the transfer target URL.  If a Sec-Content-Origin header field in the
 response contains the hash of the content (that is, the pre-image of the value
-from the request), that indicates that the server is both willing to receive the
+in the request), that indicates that the server is both willing to receive the
 transfer and that the server knows the content.
 
 The value of the Sec-Content-Origin header field is expressed as a structured
@@ -466,7 +496,8 @@ Sec-Content-Origin:
   sha-256=:v106/7c+/S7Gw2rTES3ZM+/tY8Thy//PqI4nWcFE8tg=:
 ~~~
 
-A successful state transfer would occur if the server indicated:
+A successful state transfer would occur if the response from the server
+included:
 
 ~~~
 Sec-Content-Origin:
@@ -510,6 +541,10 @@ transfer target URL. If a bundle could contain multiple potential entry points,
 each entry point for the bundle would separately specify a different transfer
 target URL.
 
+\[\[Intuitively, it seems prudent to limit transfer target URLs in the same
+bundle to the same origin, but I don't have a concrete reason for doing so
+right now.]]
+
 A transfer target URL does not need to be specified if the intent is to never
 support the ability to transfer to an online state.
 
@@ -518,12 +553,13 @@ the target origin can be the target of a state transfer. After a successful
 transfer, the user agent loads the transfer target URL.
 
 Note:
-: Including the transfer target URL in content means that altering the value
-  will cause the content hash to assume a new value.  This generates a new
-  content-based origin.  Two different origins cannot share state.
+: Including the transfer target URL in content means that the content hash
+  is dependent on its value.  This ensures that different content-based origins
+  are produced if different transfer target URLs are used.  Two different
+  origins cannot share state.
 
-A commitment in this form allows user agents to present the target origin in
-interfaces.  While no strong assurances can be made about the attribution of
+A commitment in this form could allow user agents to present the target origin
+in interfaces. While no strong assurances can be made about the attribution of
 content to this origin, this might make it easier to generate user interfaces.
 
 Different content types might provide a way of encoding the transfer target URL.
@@ -543,8 +579,7 @@ transferred.
 
 Upon successful completion of transfer, if loading the transfer target resource
 produces an HTML document, an event is delivered to content of that resource
-that describes what information was transferred.  \[\[TBD: The form of the
-event.]]
+that describes what information was transferred.
 
 A user agent MAY request user permission to transfer some state.  This might be
 conditioned on what state is being transferred.  For instance, a user agent
@@ -590,13 +625,13 @@ content will match what appears in the bundle.
 
 ### Transfer of Storage {#transfer-storage}
 
-Upon transfer, any indexedDB stores {{INDEXEDDB}} are transferred to the target
-origin.  The names of any databases are prefixed with the origin from which they
-came.  If a database with the same name exists at the destination, a new name is
-selected.
+Upon transfer, any indexedDB databases {{INDEXEDDB}} are transferred to the
+target origin.  The names of any databases are prefixed with the origin from
+which they came.  If a database with the same name exists at the destination, a
+new name is selected.
 
-The event that indicates transfer will list the databases that were transferred
-by name.
+The event that indicates transfer will list the databases that were
+transferred, their names and any name changes.
 
 
 ### Transfer of Permissions {#transfer-permissions}
@@ -605,10 +640,10 @@ As part of a state transfer, any persistent permissions that a user granted the
 content-based origin might be transferred to the target origin.
 
 Whether any given permission is transferred and what conditions are attached to
-the transferral will depend on the policy of the user agent.  In some cases, it
-might be considered appropriate to discard permissions and request them anew.
-As transferrance is a one-time event, causing prompts to be reinitiated might
-not be too much of an imposition.
+the transferral will depend on the policy of the user agent.  It might be
+considered best to discard permissions and request them anew.  As transferrance
+is a one-time event, causing prompts to be reinitiated might not be too much of
+an imposition.
 
 
 ## Navigation Transfers {#navigation}
@@ -667,7 +702,7 @@ mechanism depends on the target origin being strongly authenticated.
 
 # IANA Considerations
 
-TODO: Register the Sec-Content-Origin header field.
+\[\[TODO: Register the Sec-Content-Origin header field.  Probably a lot more.]]
 
 
 
@@ -676,5 +711,5 @@ TODO: Register the Sec-Content-Origin header field.
 # Acknowledgments
 {:numbered="false"}
 
-This work is hardly original, nor is it an individual effort.  TODO:
-acknowledge.
+This work is hardly original, nor is it an individual effort. \[\[TODO:
+acknowledge.]]
