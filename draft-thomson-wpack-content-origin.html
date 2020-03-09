@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>Content-Based Origins for the Web</title>
+<meta content="Martin Thomson" name="author">
+<meta content="
+       Making content available to clients that are unable or unwilling to contact a
+web origin enables new means of acquiring content.  This document describes a
+method for taking application state accumulated by an offline user agent in
+relation to a piece of content and making that state available in a fully online
+context.  This enables continuous use of content, starting from a state where
+the user agent does not contact an origin and ending with 
+       This document proposes an update to the definition of Origin in RFC 6454.  It
+also proposes changes that would affect HTML, which is outside of the remit of
+the IETF. 
+    " name="description">
+<meta content="xml2rfc 2.40.1" name="generator">
+<meta content="Internet-Draft" name="keyword">
+<meta content="draft-thomson-wpack-content-origin-latest" name="ietf.draft">
+<link href="draft-thomson-wpack-content-origin.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">@import url('https://martinthomson.github.io/i-d-template/fonts.css');
+
+html {
+  --background-color: #fff;
+  --text-color: #222;
+  --title-color: #191919;
+  --link-color: #2a6496;
+  --highlight-color: #f9f9f9;
+  --line-color: #eee;
+  --small-font-size: 14.5px;
+}
+body {
+  max-width: 624px;
+  margin: 75px auto;
+  padding: 0 5px;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  font: 16px/22px "Lora", serif;
+  scroll-behavior: smooth;
+}
+
+.ears {
+  display: none;
+}
+
+/* headings */
+#title, h1, h2, h3, h4, h5, h6 {
+  font-family: "Cabin Condensed", sans-serif;
+  font-weight: 600;
+  margin: 0.8em 0 0.3em;
+  font-size-adjust: 0.5;
+  color: var(--title-color);
+}
+#title {
+  padding: 1em 0 0.2em;
+  font-size: 32px;
+  line-height: 40px;
+  clear: both;
+}
+h1, h2, h3 {
+  font-size: 22px;
+  line-height: 26px;
+}
+h4, h5, h6 {
+  font-size: 18px;
+  line-height: 22px;
+}
+
+/* general structure */
+.author {
+  padding-bottom: 0.3em;
+}
+#abstract+p, #abstract+p code, #abstract+p samp, #abstract+p tt {
+  font-size: 18px;
+  line-height: 24px;
+}
+p {
+  padding: 0;
+  margin: 0.5em 0;
+  text-align: left;
+}
+div, span {
+  position: relative;
+}
+div {
+  margin: 0;
+}
+.alignRight.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignRight.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignRight {
+  margin: 1em 0;
+}
+.alignRight > *:first-child {
+  border: none;
+  margin: 0;
+  float: right;
+  clear: both;
+}
+.alignRight > *:nth-child(2) {
+  clear: both;
+  display: block;
+  border: none;
+}
+svg {
+  display: block;
+}
+.alignCenter.art-text {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  padding: 0.5em 1em 0;
+  margin-bottom: 0.5em;
+}
+.alignCenter.art-text pre {
+  padding: 0;
+  width: auto;
+}
+.alignCenter {
+  margin: 1em 0;
+}
+.alignCenter > *:first-child {
+  border: none;
+  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+     support flexbox yet.
+  */
+  display: table;
+  margin: 0 auto;
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 1em 2em;
+}
+ol ol, ul ul, ol ul, ul ol {
+  margin-left: 1em;
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+.ulCompact li {
+  margin: 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+}
+ul.empty li, .ulEmpty li {
+  margin-top: 0.5em;
+}
+ul.compact, .ulCompact,
+ol.compact, .olCompact {
+  line-height: 100%;
+  margin: 0 0 0 2em;
+}
+
+/* definition lists */
+dl {
+}
+dl > dt {
+  float: left;
+  margin-right: 1em;
+}
+dl > dd {
+  margin-bottom: .8em;
+  min-height: 1.3em;
+}
+dl.compact > dd, .dlCompact > dd {
+  margin-bottom: 0em;
+}
+dl > dd > dl {
+  margin-top: 0.5em;
+  margin-bottom: 0em;
+}
+
+/* links */
+a, a[href].selfRef:hover {
+  text-decoration: none;
+}
+a[href].selfRef {
+  color: var(--text-color);
+}
+a[href] {
+  color: var(--link-color);
+}
+a[href]:hover {
+  text-decoration: underline;
+}
+a[href].selfRef:hover {
+  background-color: var(--highlight-color);
+}
+a.xref {
+  white-space: nowrap;
+}
+
+/* Figures */
+tt, code, pre {
+  background-color: var(--highlight-color);
+  font: 14px/22px 'Oxygen Mono', monospace;
+}
+pre {
+  border: 1px solid var(--line-color);
+  line-height: 17px;
+  margin: 5px;
+  padding: 5px;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0.5em 0;
+}
+figure blockquote {
+  margin: 0.8em 0.4em 0.4em;
+}
+figcaption, caption {
+  font-style: italic;
+  margin: 0.5em 1.5em;
+  text-align: left;
+}
+@media screen {
+  pre {
+    display: inline-block;
+    overflow-x: auto;
+    max-width: 100%;
+    width: calc(100% - 22px - 1em);
+  }
+  figure pre {
+    display: block;
+    width: calc(100% - 25px);
+  }
+  pre + .pilcrow {
+    display: inline-block;
+    vertical-align: text-bottom;
+    padding-bottom: 8px;
+  }
+  table {
+    display: inline-block;
+    overflow-x: auto;
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 0 2em;
+  font-style: italic;
+}
+blockquote {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--line-color);
+  border-radius: 3px;
+  margin: 1em 0;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+
+/* tables */
+table {
+  width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  border: 1px solid var(--line-color);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5em 0.75em;
+}
+th {
+  text-align: left;
+  background-color: #eee;
+}
+tr:nth-child(2n) > td {
+  background-color: var(--background-color);
+}
+tr:nth-child(2n+1) > td {
+  background-color: var(--highlight-color);
+}
+thead+tbody tr:nth-child(2n) > td {
+  background-color: var(--highlight-color);
+}
+thead+tbody tr:nth-child(2n+1) > td {
+  background-color: var(--background-color);
+}
+table caption {
+  font-style: italic;
+  margin: 0.3em 0;
+  padding: 0;
+  text-align: left;
+}
+table p {
+  /* XXX to avoid bottom margin on table row signifiers. If paragraphs should
+     be allowed within tables more generally, it would be far better to select on a class. */
+  margin: 0;
+}
+
+/* pilcrow */
+a.pilcrow {
+  margin-left: 3px;
+  visibility: hidden;
+  user-select: none;
+}
+a.pilcrow[href] { color: #ddd; }
+a.pilcrow[href]:hover { text-decoration: none; }
+@media screen {
+  :hover > a.pilcrow {
+    visibility: visible;
+  }
+  a.pilcrow:hover {
+    background-color: transparent;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid var(--line-color);
+}
+.bcp14 {
+  font-variant: small-caps;
+}
+
+.role {
+  font-variant: all-small-caps;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: var(--small-font-size);
+  line-height: 18px;
+  --identifier-width: 8em;
+}
+#identifiers dt {
+  width: var(--identifier-width);
+  margin: 0;
+  clear: left;
+  float: left;
+  text-align: right;
+}
+#identifiers dd {
+  margin: 0 0 0 calc(1em + var(--identifier-width));
+  min-width: 5em;
+}
+#identifiers .authors .author {
+  display: inline-block;
+  margin-right: 1.5em;
+}
+#identifiers .authors .org {
+  font-style: italic;
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+}
+.docInfo .prepared {
+  float: left;
+}
+.docInfo .prepared {
+  float: right;
+}
+
+/* table of contents */
+#toc {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+}
+#toc nav ul {
+  margin: 0 0.5em 0 0;
+  padding: 0;
+  list-style: none;
+}
+#toc nav li {
+  line-height: 1.3em;
+  margin: 0.75em 0;
+  padding-left: 1.2em;
+  text-indent: -1.2em;
+}
+#toc a.xref {
+  white-space: normal;
+}
+/* references */
+.references dt {
+  text-align: right;
+  font-weight: bold;
+  min-width: 7em;
+}
+.references dd {
+  margin-left: 8em;
+  overflow: auto;
+}
+
+.refInstance {
+  margin-bottom: 1.25em;
+}
+
+.references .ascii {
+  margin-bottom: 0.25em;
+}
+
+/* index */
+.index ul {
+  margin: 0 0 0 1em;
+  padding: 0;
+  list-style: none;
+}
+.index ul ul {
+  margin: 0;
+}
+.index li {
+  margin: 0;
+  text-indent: -2em;
+  padding-left: 2em;
+  padding-bottom: 5px;
+}
+.indexIndex {
+  margin: 0.5em 0 1em;
+}
+.index a {
+  font-weight: 700;
+}
+/* make the index two-column on all but the smallest screens */
+@media (min-width: 600px) {
+  .index ul {
+    column-count: 2;
+    column-gap: 20px;
+  }
+  .index ul ul {
+    column-count: 1;
+    column-gap: 0;
+  }
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  margin: 1em 0;
+}
+address.vcard .nameRole {
+  font-weight: 700;
+  margin-left: 0;
+}
+address.vcard .label {
+  margin: 0.5em 0;
+}
+address.vcard .type {
+  display: none;
+}
+.alternative-contact {
+  margin: 1.5em 0 1em;
+}
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+@media (min-width: 600px) {
+  #authors-addresses > section {
+    display: relative;
+    padding: 32px 0 0;
+    column-count: 2;
+    column-gap: 20px;
+  }
+  #name-authors-address {
+    position: absolute;
+    top: 0px;
+    column-span: all;
+  }
+  /* hack for break-inside: avoid-column */
+  #authors-addresses address {
+    display: inline-block;
+    break-inside: avoid-column;
+  }
+}
+
+/* temporary notes */
+.rfcEditorRemove::before {
+  position: absolute;
+  top: 0.2em;
+  right: 0.2em;
+  padding: 0.2em;
+  content: "The RFC Editor will remove this note";
+  color: #b76427;
+  background-color: rgba(249, 232, 105, 0.3);
+}
+.rfcEditorRemove {
+  position: relative;
+  padding-top: 1.8em;
+  background-color: rgba(249, 232, 105, 0.3);
+  border-radius: 3px;
+}
+.cref {
+  background-color: rgba(249, 232, 105, 0.3);
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+/* alternative layout for smaller screens */
+@media screen and (max-width: 953px) {
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    opacity: 0.6;
+  }
+  #toc.active {
+      opacity: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 2px 0 2px 6px;
+    padding-right: 1em;
+    font-size: 18px;
+    line-height: 24px;
+    min-width: 190px;
+    text-align: right;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+  }
+  #toc h2::before { /* css hamburger */
+    float: right;
+    position: relative;
+    width: 1em;
+    height: 1px;
+    left: -164px;
+    margin: 8px 0 0 0;
+    background: white none repeat scroll 0 0;
+    box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+    content: "";
+  }
+  #toc nav {
+    display: none;
+    background-color: var(--background-color);
+    padding: 0.5em 1em 1em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    height: calc(100vh - 48px);
+    border-left: 1px solid #ddd;
+  }
+  #toc.active nav {
+    display: block;
+  }
+  /* Make the collapsed ToC header render white on gray also when it's a link */
+  #toc h2 a,
+  #toc h2 a:link,
+  #toc h2 a:focus,
+  #toc h2 a:hover,
+  #toc a.toplink,
+  #toc a.toplink:hover {
+    color: white;
+    background-color: #444;
+    text-decoration: none;
+  }
+  #toc a.toplink {
+    margin-top: 2px;
+  }
+}
+
+/* alternative layout for wide screens */
+@media screen and (min-width: 954px) {
+  body {
+    padding-right: 380px;
+  }
+  #toc {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    right: calc(50vw - 480px);
+    width: 312px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+  }
+  #toc h2 {
+    margin: 0;
+    padding: 0.25em 1em 1em 0;
+  }
+  #toc nav {
+    display: block;
+    height: calc(90vh - 84px);
+    bottom: 0;
+    padding: 0.5em 0 2em;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  #toc nav > ul  {
+    margin-bottom: 2em;
+  }
+  #toc ul {
+    margin: 0 0 0 4px;
+    font-size: var(--small-font-size);
+  }
+  #toc ul p, #toc ul li {
+    margin: 2px 0;
+    line-height: 22px;
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc, #n-introduction {
+    page-break-before: always;
+  }
+  #toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  figure, pre {
+    page-break-inside: avoid;
+  }
+  figure {
+    overflow: scroll;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  h2+*, h3+*, h4+*, h5+*, h6+* {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+}
+
+/* Changes introduced to fix issues found during implementation */
+
+/* Separate body from document info even without intervening H1 */
+section {
+  clear: both;
+}
+
+/* Top align author divs, to avoid names without organization dropping level with org names */
+.author {
+  vertical-align: top;
+}
+
+/* Style section numbers with more space between number and title */
+.section-number {
+  padding-right: 0.5em;
+}
+
+/* Add styling for a link in the ToC that points to the top of the document */
+a.toplink {
+  float: right;
+  margin: 8px 0.5em 0;
+}
+
+/* Fix the dl styling to match the RFC 7992 attributes */
+dl > dt,
+dl.dlParallel > dt {
+  float: left;
+  margin-right: 1em;
+}
+dl.dlNewline > dt {
+  float: none;
+}
+
+/* Provide styling for table cell text alignment */
+table td.text-left,
+table th.text-left {
+  text-align: left;
+}
+table td.text-center,
+table th.text-center {
+  text-align: center;
+}
+table td.text-right,
+table th.text-right {
+  text-align: right;
+}
+
+/* Make the alternative author contact information look less like just another
+   author, and group it closer with the primary author contact information */
+.alternative-contact {
+  margin: 0.5em 0 0.25em 0;
+}
+address .non-ascii {
+  margin: 0 0 0 2em;
+}
+
+/* With it being possible to set tables with alignment
+  left, center, and right, { width: 100%; } does not make sense */
+table {
+  width: auto;
+}
+
+/* Avoid reference text that sits in a block with very wide left margin,
+   because of a long floating dt label.*/
+.references dd {
+  overflow: visible;
+}
+
+/* Control caption placement */
+caption {
+  caption-side: bottom;
+}
+
+/* Limit the width of the author address vcard, so names in right-to-left
+   script don't end up on the other side of the page. */
+
+address.vcard {
+  max-width: 20em;
+  margin-right: auto;
+}
+
+/* For address alignment dependent on LTR or RTL scripts */
+address div.left {
+  text-align: left;
+}
+address div.right {
+  text-align: right;
+}
+
+/* Provide table alignment support.  We can't use the alignX classes above
+   since they do unwanted things with caption and other styling. */
+table.right {
+ margin-left: auto;
+ margin-right: 0;
+}
+table.center {
+ margin-left: auto;
+ margin-right: auto;
+}
+table.left {
+ margin-left: 0;
+ margin-right: auto;
+}
+
+/* Give the table caption label the same styling as the figcaption */
+
+@media print {
+  .toplink {
+    display: none;
+  }
+
+  /* avoid overwriting the top border line with the ToC header */
+  #toc {
+    padding-top: 1px;
+  }
+
+  /* Avoid page breaks inside dl and author address entries */
+  dd {
+    page-break-before: avoid;
+  }
+  .vcard {
+    page-break-inside: avoid;
+  }
+
+}
+/* Tweak the bcp14 keyword presentation */
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+</style>
+<link href="rfc-local.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">Content-Based Origins</td>
+<td class="right">March 2020</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Thomson</td>
+<td class="center">Expires 10 September 2020</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">wpack</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-thomson-wpack-content-origin-latest</dd>
+<dt class="label-updates">Updates:</dt>
+<dd class="updates">
+<a href="https://www.rfc-editor.org/rfc/rfc6454" class="eref">6454</a> (if approved)</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2020-03-09" class="published">9 March 2020</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Standards Track</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2020-09-10">10 September 2020</time></dd>
+<dt class="label-authors">Author:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">M. Thomson</div>
+<div class="org">Mozilla</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">Content-Based Origins for the Web</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">Making content available to clients that are unable or unwilling to contact a
+web origin enables new means of acquiring content.  This document describes a
+method for taking application state accumulated by an offline user agent in
+relation to a piece of content and making that state available in a fully online
+context.  This enables continuous use of content, starting from a state where
+the user agent does not contact an origin and ending with<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-2">This document proposes an update to the definition of Origin in RFC 6454.  It
+also proposes changes that would affect HTML, which is outside of the remit of
+the IETF.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
+</section>
+<section class="note" id="section-note.1">
+      <h2 id="name-note-to-readers">
+<a href="#name-note-to-readers" class="section-name selfRef">Note to Readers</a>
+      </h2>
+<p id="section-note.1-1">Discussion of this document takes place on the
+  WPACK Working Group mailing list (wpack@ietf.org),
+  which is archived at <a href="https://mailarchive.ietf.org/arch/browse/wpack/">https://mailarchive.ietf.org/arch/browse/wpack/</a>.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
+<p id="section-note.1-2">Source for this draft and an issue tracker can be found at
+  <a href="https://github.com/martinthomson/wpack-content">https://github.com/martinthomson/wpack-content</a>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 10 September 2020.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2020 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Simplified BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Simplified BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction" class="xref">Introduction</a><a href="#section-toc.1-1.1.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="xref">2</a>.  <a href="#name-conventions-and-definitions" class="xref">Conventions and Definitions</a><a href="#section-toc.1-1.2.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="xref">3</a>.  <a href="#name-overview-and-comparisons" class="xref">Overview and Comparisons</a><a href="#section-toc.1-1.3.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="xref">3.1</a>.  <a href="#name-offline-to-online-transitio" class="xref">Offline-to-Online Transition for Content-Based Origins</a><a href="#section-toc.1-1.3.2.1.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.2">
+                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="xref">3.2</a>.  <a href="#name-offline-to-online-transition" class="xref">Offline-to-Online Transition for Signed Exchanges</a><a href="#section-toc.1-1.3.2.2.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.3">
+                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="xref">3.3</a>.  <a href="#name-comparison-with-signed-exch" class="xref">Comparison with Signed Exchanges</a><a href="#section-toc.1-1.3.2.3.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.3.2.4">
+                <p id="section-toc.1-1.3.2.4.1"><a href="#section-3.4" class="xref">3.4</a>.  <a href="#name-comparison-with-unsigned-bu" class="xref">Comparison with Unsigned Bundles</a><a href="#section-toc.1-1.3.2.4.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="xref">4</a>.  <a href="#name-content-based-origin-defini" class="xref">Content-Based Origin Definition</a><a href="#section-toc.1-1.4.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="xref">4.1</a>.  <a href="#name-content-type-malleability" class="xref">Content Type Malleability</a><a href="#section-toc.1-1.4.2.1.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="xref">4.2</a>.  <a href="#name-hash-agility" class="xref">Hash Agility</a><a href="#section-toc.1-1.4.2.2.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-transfer-to-https-origin" class="xref">Transfer to HTTPS Origin</a><a href="#section-toc.1-1.5.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="xref">5.1</a>.  <a href="#name-successful-transfer" class="xref">Successful Transfer</a><a href="#section-toc.1-1.5.2.1.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="xref">5.2</a>.  <a href="#name-unsuccessful-transfer" class="xref">Unsuccessful Transfer</a><a href="#section-toc.1-1.5.2.2.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.5.2.3">
+                <p id="section-toc.1-1.5.2.3.1"><a href="#section-5.3" class="xref">5.3</a>.  <a href="#name-transfer-target" class="xref">Transfer Target</a><a href="#section-toc.1-1.5.2.3.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.5.2.4">
+                <p id="section-toc.1-1.5.2.4.1"><a href="#section-5.4" class="xref">5.4</a>.  <a href="#name-state-transfer" class="xref">State Transfer</a><a href="#section-toc.1-1.5.2.4.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.5.2.4.2.1">
+                    <p id="section-toc.1-1.5.2.4.2.1.1"><a href="#section-5.4.1" class="xref">5.4.1</a>.  <a href="#name-transfer-of-content" class="xref">Transfer of Content</a><a href="#section-toc.1-1.5.2.4.2.1.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.5.2.4.2.2">
+                    <p id="section-toc.1-1.5.2.4.2.2.1"><a href="#section-5.4.2" class="xref">5.4.2</a>.  <a href="#name-transfer-of-storage" class="xref">Transfer of Storage</a><a href="#section-toc.1-1.5.2.4.2.2.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.5.2.4.2.3">
+                    <p id="section-toc.1-1.5.2.4.2.3.1"><a href="#section-5.4.3" class="xref">5.4.3</a>.  <a href="#name-transfer-of-permissions" class="xref">Transfer of Permissions</a><a href="#section-toc.1-1.5.2.4.2.3.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.5.2.5">
+                <p id="section-toc.1-1.5.2.5.1"><a href="#section-5.5" class="xref">5.5</a>.  <a href="#name-navigation-transfers" class="xref">Navigation Transfers</a><a href="#section-toc.1-1.5.2.5.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.5.2.6">
+                <p id="section-toc.1-1.5.2.6.1"><a href="#section-5.6" class="xref">5.6</a>.  <a href="#name-communication-between-origi" class="xref">Communication Between Origins</a><a href="#section-toc.1-1.5.2.6.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="xref">6</a>.  <a href="#name-security-considerations" class="xref">Security Considerations</a><a href="#section-toc.1-1.6.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="xref">7</a>.  <a href="#name-iana-considerations" class="xref">IANA Considerations</a><a href="#section-toc.1-1.7.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="xref">8</a>.  <a href="#name-references" class="xref">References</a><a href="#section-toc.1-1.8.1" class="pilcrow">¶</a></p>
+<ul class="toc ulEmpty">
+<li class="toc ulEmpty" id="section-toc.1-1.8.2.1">
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="xref">8.1</a>.  <a href="#name-normative-references" class="xref">Normative References</a><a href="#section-toc.1-1.8.2.1.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.8.2.2">
+                <p id="section-toc.1-1.8.2.2.1"><a href="#section-8.2" class="xref">8.2</a>.  <a href="#name-informative-references" class="xref">Informative References</a><a href="#section-toc.1-1.8.2.2.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-appendix.a" class="xref"></a><a href="#name-acknowledgments" class="xref">Acknowledgments</a><a href="#section-toc.1-1.9.1" class="pilcrow">¶</a></p>
+</li>
+<li class="toc ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#section-appendix.b" class="xref"></a><a href="#name-authors-address" class="xref">Author's Address</a><a href="#section-toc.1-1.10.1" class="pilcrow">¶</a></p>
+</li>
+</ul>
+</nav>
+</section>
+</div>
+<div id="introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">The web relies on the concept of origins <span>[<a href="#ORIGIN" class="xref">ORIGIN</a>]</span> as the primary
+means of identification for resources.  A strongly authenticated HTTPS origin is
+the basis for many security decisions.  However, establishing this identity
+relies on having an active TLS <span>[<a href="#TLS" class="xref">TLS</a>]</span> connection to a server that is
+considered authoritative for the origin; see Section 11 of
+<span>[<a href="#HTTP" class="xref">HTTP</a>]</span>.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">A user agent that is offline when content is received cannot establish this
+authority. Similarly, a user agent might be unwilling to contact a server at the
+time that content is received.  One reason for not contacting a server might be
+to avoid leaking information about the context in which content was referenced.
+In either case, content cannot be attributed to the origin at the time it is
+received.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">In operation, content might be delivered by any means other than a TLS
+connection to the intended server.  Then there might be a period during which
+the content is used.  For instance, the content might be a web page that is
+capable of functioning offline, though certain functions might be unavailable.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">At some after content is received, the user agent might want to establish a
+connection to the server and continue use.  True continuity of use could depend
+on state established during the period that the user agent did not contact the
+server.<a href="#section-1-4" class="pilcrow">¶</a></p>
+<p id="section-1-5">This document proposes a design whereby content can be ascribed an identity that
+is based solely on that content.  Together with a means of transferring control
+over state established by one origin to another, this allows content to be
+delivered offline and used with the ability to transition to a full online
+interaction with a web server.<a href="#section-1-5" class="pilcrow">¶</a></p>
+<p id="section-1-6">Alternative designs attempt to provide a means to ascribe an HTTPS origin to
+content through the use of signatures
+<span>[<a href="#SXG" class="xref">SXG</a>]</span>.  Those designs depend on
+finding a way to modify the core concept of web origins that allows for
+object-based authority.  This avoids the problems associated with transfer of
+state between origins.  However, a fundamental change to the way in which
+authority is determined requires the use of a number of safeguards.  These
+safeguards contain both technical mechanisms and usage constraints.<a href="#section-1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="conventions-and-definitions">
+<section id="section-2">
+      <h2 id="name-conventions-and-definitions">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+      </h2>
+<p id="section-2-1">The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
+document are to be interpreted as described in BCP 14 <span>[<a href="#RFC2119" class="xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="xref">RFC8174</a>]</span>
+when, and only when, they appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">This document uses the term "user agent" consistent with the usage in both
+<span>[<a href="#HTTP" class="xref">HTTP</a>]</span> and <span>[<a href="#HTML" class="xref">HTML</a>]</span>.  Colloquially, "user agent" is a web browser.<a href="#section-2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="overview-and-comparisons">
+<section id="section-3">
+      <h2 id="name-overview-and-comparisons">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-overview-and-comparisons" class="section-name selfRef">Overview and Comparisons</a>
+      </h2>
+<p id="section-3-1">This section provides an overview of how these tools might be used. This
+section compares designs.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">The most interesting scenario is understanding the transition from an state
+where the target origin has not been contacted (that is, the user agent is
+either offline or effectively so), to one where the user agent contacts the
+target origin (the user agent is online).<a href="#section-3-2" class="pilcrow">¶</a></p>
+<div id="offline-to-online-transition-for-content-based-origins">
+<section id="section-3.1">
+        <h3 id="name-offline-to-online-transitio">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-offline-to-online-transitio" class="section-name selfRef">Offline-to-Online Transition for Content-Based Origins</a>
+        </h3>
+<p id="section-3.1-1">In this proposal, content is loaded from a bundle. After loading the bundle,
+the browser treats content in the bundle as existing in an origin unique to the
+content of the bundle; see <a href="#content-origin" class="xref">Section 4</a>.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-2">If the bundle contains a transfer target URL (see <a href="#transfer-target" class="xref">Section 5.3</a>), the
+browser then attempts to load that resource, providing an indication to the
+target origin that a transfer from the content-based origin is possible. If the
+origin accepts the transfer of state, state is transferred from the
+content-based origin to the target origin. This sequence is shown in
+<a href="#ex-cbo" class="xref">Figure 1</a>.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<span id="name-state-transfer-for-content-"></span><div id="ex-cbo">
+<figure id="figure-1">
+          <div class="artwork art-text alignLeft" id="section-3.1-3.1">
+<pre>
+               +---------------+
+               |  Load Bundle  |
+               +---------------+
+                       |
+                       v
+               +---------------+       +---------+
+ Aborted +-----| Content-Based |=======|  State  |
+Transfer +----&gt;|    Origin     |       +---------+
+               +---------------+            :
+                       |  State Transfer    :
+                       | IFF Origin Accepts :
+                       v                    v
+               +---------------+       +---------+
+               |   Online at   |=======|  State  |
+               | Target Origin |       +---------+
+               +---------------+
+</pre>
+</div>
+<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
+<a href="#name-state-transfer-for-content-" class="selfRef">State Transfer for Content-Based Origins</a>
+          </figcaption></figure>
+</div>
+<p id="section-3.1-4">Failure to connect to the target origin - such as when the browser has no
+active Internet connection - causes the redirect to be aborted. The browser
+continues to display the bundle content.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
+<p id="section-3.1-5">If the origin does not accept the transfer, the browser shows content from the
+target origin and any state from the bundle is destroyed.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="offline-to-online-transition-for-signed-exchanges">
+<section id="section-3.2">
+        <h3 id="name-offline-to-online-transition">
+<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-offline-to-online-transition" class="section-name selfRef">Offline-to-Online Transition for Signed Exchanges</a>
+        </h3>
+<p id="section-3.2-1">With <span>[<a href="#LOADING" class="xref">LOADING</a>]</span> and <span>[<a href="#SXG" class="xref">SXG</a>]</span>, content
+is loaded from a signed bundle. After loading the bundle, if the signature is
+considered valid, the browser stores bundled content in a cache that is
+specific to the target origin. The browser then redirects to the request (or
+target) URL from the bundle. The browser uses content from the bundle in place
+of fetching from the origin.  This is illustrated in <a href="#ex-sxg" class="xref">Figure 2</a>.<a href="#section-3.2-1" class="pilcrow">¶</a></p>
+<span id="name-content-use-with-signed-exc"></span><div id="ex-sxg">
+<figure id="figure-2">
+          <div class="artwork art-text alignLeft" id="section-3.2-2.1">
+<pre>
+    +-----------------+
+    |   Load Bundle   |
+    +-----------------+
+            |             ..If signature is trusted...
+            v             :                          :
+    +-----------------+   :   +-----------------+    :
+    | Check Signature +------&gt;| Store Exchanges |    :
+    +-----------------+   :   +-----------------+    :
+  Redirect  |             :                          :
+            v             :                          :
+    +-----------------+   :   +-----------------+    :
+    |    Online at    |&lt;------|  Use Exchanges  |    :
+    |   Request URL   |   :   +-----------------+    :
+    +-----------------+   :...........................
+</pre>
+</div>
+<figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
+<a href="#name-content-use-with-signed-exc" class="selfRef">Content Use with Signed Exchanges</a>
+          </figcaption></figure>
+</div>
+<p id="section-3.2-3">Having signed content from the bundle allows use of that content prior to
+connecting to the origin. Importantly, it allows attribution of any operations
+to that origin. Optimizations that otherwise might not be possible are enabled
+because resources from the bundle can be treated as if they were loaded from
+the target origin, but the browser does not need to make a request to the
+origin.<a href="#section-3.2-3" class="pilcrow">¶</a></p>
+<p id="section-3.2-4">Critically, if the browser is fully offline, it can decide to operate with the
+bundle without having to connect to the origin. If the bundled content is
+signed and trusted, the application to operate offline. Any actions performed
+act on state for the target origin.<a href="#section-3.2-4" class="pilcrow">¶</a></p>
+<dl class="dlParallel" id="section-3.2-5">
+          <dt id="section-3.2-5.1">Note:</dt>
+<dd id="section-3.2-5.2">
+  While Service Workers <span>[<a href="#SERVICE-WORKERS" class="xref">SERVICE-WORKERS</a>]</span> can offer a similar experience,
+they require that the browser be online initially to load the service worker
+script. This design requires no prior interaction with the target origin.<a href="#section-3.2-5.2" class="pilcrow">¶</a>
+</dd>
+</dl>
+<p id="section-3.2-6">Relative to content-based origins, the use of signatures avoids the need to
+connect to the target origin and confirm knowledge of the content. For cases
+where the transition to online status is intended to be immediate, signed
+exchanges allow a redirect to happen without any requests being made. A signed
+exchange will therefore display content that is attributed to the target origin
+faster.<a href="#section-3.2-6" class="pilcrow">¶</a></p>
+<p id="section-3.2-7">Failure to validate a signature causes a redirect to an online location. If the
+client is offline, that origin will be inaccessible. If the client is online,
+none of the optimizations afforded by the bundle are available and this appears
+to be a normal redirection.<a href="#section-3.2-7" class="pilcrow">¶</a></p>
+<p id="section-3.2-8">[[Note that it is unclear whether a browser might be able to fall back to
+treating a signed bundle as unsigned if the signature is bad.]]<a href="#section-3.2-8" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="comparison-with-signed-exchanges">
+<section id="section-3.3">
+        <h3 id="name-comparison-with-signed-exch">
+<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-comparison-with-signed-exch" class="section-name selfRef">Comparison with Signed Exchanges</a>
+        </h3>
+<p id="section-3.3-1">Signed exchanges attempt to address the problem of attributing content to an
+origin.  In effect, they add an object-based security model to the existing
+channel-based model used on the web.  Signatures over bundles (or parts
+thereof) are used by an origin to attest to the contents of a bundle.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
+<p id="section-3.3-2">Having two security models operate in the same space potentially creates an
+exposure to the worst properties of each model. To reduce the chances that the
+drawbacks of the newly-added object-based model affect existing channel-based
+usages, signed exchanges include a number of hardening measures. In addition to
+signatures, there are required modifications to certificates, constraints on
+validity periods, and a range of limitations on the types of content that can
+be signed.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+<p id="section-3.3-3">In comparison, content-based origins do not require signatures. Questions of
+validity only apply at the point that a state transfer is initiated. However,
+this has drawbacks also. Content is not attributed to origins and state is not
+available to an online origin until a transfer is initiated. This avoids the
+complexity inherent to merging two different security models. Additionally, the
+process of state transfer is likely quite complicated in practice.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
+<p id="section-3.3-4">In terms of usability, the identity attributed to content from a content-based
+origin is opaque and not particularly relatable. Though state might eventually
+be adopted by some origin, communicating the true status of content could be
+challenging. Finally, content-based origins aren't prevented from interacting
+with HTTP origins, which could lead to surprising outcomes if existing code is
+poorly unprepared for this possibility.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="comparison-with-unsigned-bundles">
+<section id="section-3.4">
+        <h3 id="name-comparison-with-unsigned-bu">
+<a href="#section-3.4" class="section-number selfRef">3.4. </a><a href="#name-comparison-with-unsigned-bu" class="section-name selfRef">Comparison with Unsigned Bundles</a>
+        </h3>
+<p id="section-3.4-1">Unsigned bundles <span>[<a href="#UNSIGNED" class="xref">UNSIGNED</a>]</span> proposes a model whereby bundles served by a
+given origin could be declared to be part of that origin and trusted. Unsigned
+bundles would otherwise be considered untrusted and would be isolated in some
+fashion. This is similar to the way in which a content-based origin might be
+transferred to a target origin.<a href="#section-3.4-1" class="pilcrow">¶</a></p>
+<p id="section-3.4-2">That proposal divides bundles into trusted and untrusted bundles. Trusted
+bundles would be able to access state from the origin that served them.<a href="#section-3.4-2" class="pilcrow">¶</a></p>
+<p id="section-3.4-3">In comparison, content-based origins would always be used for bundles and the
+distinction between trusted and untrusted is unnecessary. Content from the
+bundle would be usable to a target origin that accepts a state transfer.<a href="#section-3.4-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="content-origin">
+<section id="section-4">
+      <h2 id="name-content-based-origin-defini">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-content-based-origin-defini" class="section-name selfRef">Content-Based Origin Definition</a>
+      </h2>
+<p id="section-4-1">A content-based origin ascribes an identity to content based on the content
+itself.  For instance, a web bundle
+<span>[<a href="#BUNDLE" class="xref">BUNDLE</a>]</span> is assigned a URI based on its
+content alone.<a href="#section-4-1" class="pilcrow">¶</a></p>
+<p id="section-4-2">The sequence of bytes that comprises the content or bundled content is hashed
+using a hash function that is strongly resistant to collision and pre-image
+attack, such as SHA-256 <span>[<a href="#SHA-2" class="xref">SHA-2</a>]</span>.  The resulting hash is encoded using
+the Base 64 encoding with an URL and filename safe alphabet <span>[<a href="#BASE64" class="xref">BASE64</a>]</span>.<a href="#section-4-2" class="pilcrow">¶</a></p>
+<p id="section-4-3">This can be formed into the ASCII or Unicode serialization of an origin based on
+the Named Information URI scheme <span>[<a href="#NI" class="xref">NI</a>]</span>.  This URI is formed from the
+string "ni:///", the identifier for the hash algorithm (see Section 9.4 of
+<span>[<a href="#NI" class="xref">NI</a>]</span>); a semi-colon (";"), and the base64url encoding of the hash function
+output.  Though this uses the ni URL form, the authority and query strings are
+omitted from this serialization.<a href="#section-4-3" class="pilcrow">¶</a></p>
+<p id="section-4-4">For instance, the origin of content comprising the single ASCII character 'a' is
+represented as <code>ni:///sha-256;ypeBEsobvcr6wjGzmiPcTaeG7_gUfE5yuYB3ha_uSLs</code>.<a href="#section-4-4" class="pilcrow">¶</a></p>
+<p id="section-4-5">In tuple form, the origin is comprised of the scheme ("ni") and a host equal to
+the concatenation of hash algorithm identifier, semi-colon, and
+base64url-encoded hash function output.  The port number is always absent for an
+origin in this form.<a href="#section-4-5" class="pilcrow">¶</a></p>
+<dl class="dlParallel" id="section-4-6">
+        <dt id="section-4-6.1">Design Note:</dt>
+<dd id="section-4-6.2">
+  This design currently assumes that there won't be a hash-based URI scheme
+developed for bundles.  It would be vastly preferable to have a URI scheme
+for bundled content.  It would then be possible to reference content in a
+bundle from outside the bundle, and internal references could be
+canonicalized. Importantly, state transfer could also be initiated <em>toward</em>
+another bundle.  That could be used to upgrade bundles and other nice
+features.<a href="#section-4-6.2" class="pilcrow">¶</a>
+</dd>
+</dl>
+<p id="section-4-7">This definition of origin for named information (<code>ni://</code>) URIs extends the
+definition of origin in Section 4 of <span>[<a href="#ORIGIN" class="xref">ORIGIN</a>]</span>.<a href="#section-4-7" class="pilcrow">¶</a></p>
+<div id="content-type-malleability">
+<section id="section-4.1">
+        <h3 id="name-content-type-malleability">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-content-type-malleability" class="section-name selfRef">Content Type Malleability</a>
+        </h3>
+<p id="section-4.1-1">The hash used to generate this origin does not include any indication of content
+type or the source of information.  If it were possible for the same content to
+be interpreted as valid instances of multiple different content types, that
+might be exploited by an attacker.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-2">A user agent SHOULD enact a policy of only attributing a content-based origin to
+content that is unambiguously interpreted in a single form.  If it were possible
+for content to be interpreted as valid for multiple content types and those
+could be attributed to the same content-based origin, that might be exploited by
+an attacker.  A sample policy might only allow web bundles and HTML files to be
+assigned a content-based origin; as the first bytes of these formats are
+unambiguously different, this ensures that the same content to be interpreted as
+valid for both content types.<a href="#section-4.1-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="hash-agility">
+<section id="section-4.2">
+        <h3 id="name-hash-agility">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-hash-agility" class="section-name selfRef">Hash Agility</a>
+        </h3>
+<p id="section-4.2-1">This design depends to some extent on the hash algorithm remaining constant
+during the time that the content-based origin is used.  A change in hash
+algorithm changes the identity of the resource.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-2">It is possible to transfer state from a content-based origin derived using one
+hash algorithm to another without affecting the content of the origin itself.
+It is not often that content depends on knowing its own identity.  However, the
+identity of the origin might be made visible to other origins.  For instance,
+the window.postMessage API <span>[<a href="#HTML" class="xref">HTML</a>]</span> allows content to target a specific origin
+for sending messages and to identify the source origin of incoming messages.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.2-3">For the purposes of determining equality, user agents might consider hashes of
+the same content with different hash algorithms to be equal.  For instance, a
+user agent might consider <code>sha-256:ypeBEsobvcr6wjGzmiPcTaeG7_gUfE5yuYB3ha_uSLs</code>
+to be equal to <code>sha-384;VKWbnyKwuAiA2EJ-VIt8I6vYc0huHwNd
+zpzWl-hRdQM8qojm1XvDXvrgta_TFF8x</code> (note space added to meet formatting
+constraints).  This requires that this equivalence is known to the user agent.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4">Of the hash algorithms defined in <span>[<a href="#NI" class="xref">NI</a>]</span>, only "sha-256" is permitted for use
+with content-based origins.  This usage has no need for a truncated hash as the
+value does not usually need to be manually entered.  Furthermore, the use of
+multiple hash algorithms introduces complexity.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="transfer">
+<section id="section-5">
+      <h2 id="name-transfer-to-https-origin">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-transfer-to-https-origin" class="section-name selfRef">Transfer to HTTPS Origin</a>
+      </h2>
+<p id="section-5-1">In order to transfer state to a target origin, the server for that origin needs
+to be contacted.  Initiating transfer likely requires that an API be defined for
+use by the content of the bundle.  Transfer might be automatically initiated when navigating to a URL from a bundle; see <a href="#navigation" class="xref">Section 5.5</a>.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">A transfer is only possible where a transfer target URL is known for content;
+see <a href="#transfer-target" class="xref">Section 5.3</a>.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<p id="section-5-3">After a state transfer is initiated, the user agent fetches the transfer target
+URL.  The source content is hashed twice; once as described in
+<a href="#content-origin" class="xref">Section 4</a>; then the resulting value is hashed again.  The twice-hashed
+value is encoded into a Sec-Content-Origin header field and added to the request
+for the transfer target URL.  If a Sec-Content-Origin header field in the
+response contains the hash of the content (that is, the pre-image of the value
+in the request), that indicates that the server is both willing to receive the
+transfer and that the server knows the content.<a href="#section-5-3" class="pilcrow">¶</a></p>
+<p id="section-5-4">The value of the Sec-Content-Origin header field is expressed as a structured
+header <span>[<a href="#SH" class="xref">SH</a>]</span> dictionary with keys being the
+hash algorithm identifier (from <span>[<a href="#NI" class="xref">NI</a>]</span>) and byte sequence values of the hash.<a href="#section-5-4" class="pilcrow">¶</a></p>
+<p id="section-5-5">Multiple values can be provided with different hash algorithm identifiers.
+The values from the response correspond to the values in the request with the
+same hash algorithm identifier.  For the transfer to be successful, clients MUST
+validate that at least one value in the response hashes to the corresponding
+value in the request; clients SHOULD validate all provided values.  If the
+content does not hash to the any provided value, the transfer is unsuccessful.<a href="#section-5-5" class="pilcrow">¶</a></p>
+<dl class="dlParallel" id="section-5-6">
+        <dt id="section-5-6.1">Note:</dt>
+<dd id="section-5-6.2">
+  The response to a state transfer can be served from cache.<a href="#section-5-6.2" class="pilcrow">¶</a>
+</dd>
+</dl>
+<div id="successful-transfer">
+<section id="section-5.1">
+        <h3 id="name-successful-transfer">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-successful-transfer" class="section-name selfRef">Successful Transfer</a>
+        </h3>
+<p id="section-5.1-1">If the transfer is successful, state associated with the content-based origin
+will be transferred to the target origin.  The user agent MAY either remember
+the identity of the content-based origin and consider any content-based origin
+to be equal to the transferred origin.<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1-2">For example, assuming that a single 'a' character is valid content, then the
+client would include the following in a request (line breaks are added to
+examples for formatting reasons):<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+<div class="artwork art-text alignLeft" id="section-5.1-3">
+<pre>
+Sec-Content-Origin:
+  sha-256=:v106/7c+/S7Gw2rTES3ZM+/tY8Thy//PqI4nWcFE8tg=:
+</pre><a href="#section-5.1-3" class="pilcrow">¶</a>
+</div>
+<p id="section-5.1-4">A successful state transfer would occur if the response from the server
+included:<a href="#section-5.1-4" class="pilcrow">¶</a></p>
+<div class="artwork art-text alignLeft" id="section-5.1-5">
+<pre>
+Sec-Content-Origin:
+  sha-256=:ypeBEsobvcr6wjGzmiPcTaeG7/gUfE5yuYB3ha/uSLs=:
+</pre><a href="#section-5.1-5" class="pilcrow">¶</a>
+</div>
+<p id="section-5.1-6">A user agent that automatically follows redirections (3xx status codes) MUST
+allow the server to redirect to a resource that provides the response.<a href="#section-5.1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="unsuccessful-transfer">
+<section id="section-5.2">
+        <h3 id="name-unsuccessful-transfer">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-unsuccessful-transfer" class="section-name selfRef">Unsuccessful Transfer</a>
+        </h3>
+<p id="section-5.2-1">A transfer can be unsuccessful in two ways.  If the target origin cannot be
+contacted successfully, the content-based origin continues to exist.  Any API
+might indicate that the attempt failed.  Failure to transfer state is expected
+when the user agent is offline.  After failing to contact the target origin, a
+transfer can be attempted at a later time.  This causes navigation to fail and
+the user agent MAY display a URL from the content-based origin (TODO: this
+requires that we define a means of identification for content inside bundles).<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">A valid, final HTTP response that indicates anything other than a server error
+(that is, 5xx status codes) without including the hash pre-image in the response
+MUST be treated as a failed migration.  After a failed migration, information
+about the target origin SHOULD be removed from interfaces related to the
+content-based origin, except for diagnostic purposes.  The content-based origin
+can continue to exist but further attempts to transfer state MUST immediately
+fail.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.2-3">After a valid HTTP response, the user agent navigates to the transfer target URL
+or any resource that was included in any redirections.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.2-4">Any valid HTTP response, successful or not, MUST cause data associated with the
+content-based origin to be cleared as though clear-site-data were invoked
+<span>[<a href="#CLEAR-DATA" class="xref">CLEAR-DATA</a>]</span>.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="transfer-target">
+<section id="section-5.3">
+        <h3 id="name-transfer-target">
+<a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-transfer-target" class="section-name selfRef">Transfer Target</a>
+        </h3>
+<p id="section-5.3-1">To enable transfer, content MUST include an attribute that indicates the
+transfer target URL. If a bundle could contain multiple potential entry points,
+each entry point for the bundle would separately specify a different transfer
+target URL.<a href="#section-5.3-1" class="pilcrow">¶</a></p>
+<p id="section-5.3-2">[[Intuitively, it seems prudent to limit transfer target URLs in the same
+bundle to the same origin, but I don't have a concrete reason for doing so
+right now.]]<a href="#section-5.3-2" class="pilcrow">¶</a></p>
+<p id="section-5.3-3">A transfer target URL does not need to be specified if the intent is to never
+support the ability to transfer to an online state.<a href="#section-5.3-3" class="pilcrow">¶</a></p>
+<p id="section-5.3-4">The origin of the transfer target URL is the target origin. Only
+the target origin can be the target of a state transfer. After a successful
+transfer, the user agent loads the transfer target URL.<a href="#section-5.3-4" class="pilcrow">¶</a></p>
+<dl class="dlParallel" id="section-5.3-5">
+          <dt id="section-5.3-5.1">Note:</dt>
+<dd id="section-5.3-5.2">
+  Including the transfer target URL in content means that the content hash
+is dependent on its value.  This ensures that different content-based origins
+are produced if different transfer target URLs are used.  Two different
+origins cannot share state.<a href="#section-5.3-5.2" class="pilcrow">¶</a>
+</dd>
+</dl>
+<p id="section-5.3-6">A commitment in this form could allow user agents to present the target origin
+in interfaces. While no strong assurances can be made about the attribution of
+content to this origin, this might make it easier to generate user interfaces.<a href="#section-5.3-6" class="pilcrow">¶</a></p>
+<p id="section-5.3-7">Different content types might provide a way of encoding the transfer target URL.
+The URL could be provided external to the content, but this requires some
+unspecified means of ensuring that the content-based origin depends on the value
+of the URL; this document only supports content that can encode the transfer
+target URL.<a href="#section-5.3-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="state-transfer">
+<section id="section-5.4">
+        <h3 id="name-state-transfer">
+<a href="#section-5.4" class="section-number selfRef">5.4. </a><a href="#name-state-transfer" class="section-name selfRef">State Transfer</a>
+        </h3>
+<p id="section-5.4-1">Only limited state information can be transferred between origins.  This is
+limited to those items that are identified here, or those that are added in
+later extensions.  This document describes how content (<a href="#transfer-content" class="xref">Section 5.4.1</a>),
+stored data <a href="#transfer-storage" class="xref">Section 5.4.2</a>), and permissions <a href="#transfer-permissions" class="xref">Section 5.4.3</a> are
+transferred.<a href="#section-5.4-1" class="pilcrow">¶</a></p>
+<p id="section-5.4-2">Upon successful completion of transfer, if loading the transfer target resource
+produces an HTML document, an event is delivered to content of that resource
+that describes what information was transferred.<a href="#section-5.4-2" class="pilcrow">¶</a></p>
+<p id="section-5.4-3">A user agent MAY request user permission to transfer some state.  This might be
+conditioned on what state is being transferred.  For instance, a user agent
+might prompt before transferring permissions <span>[<a href="#PERMISSIONS" class="xref">PERMISSIONS</a>]</span>; see
+<a href="#transfer-permissions" class="xref">Section 5.4.3</a>.<a href="#section-5.4-3" class="pilcrow">¶</a></p>
+<div id="transfer-content">
+<section id="section-5.4.1">
+          <h4 id="name-transfer-of-content">
+<a href="#section-5.4.1" class="section-number selfRef">5.4.1. </a><a href="#name-transfer-of-content" class="section-name selfRef">Transfer of Content</a>
+          </h4>
+<p id="section-5.4.1-1">How content that is delivered in the bundle is used by the target origin is
+probably the most important aspect of any design in this space. This document
+proposes that all content in the bundle is adopted by the origin after a
+transfer completes.<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.4.1-2">This design means that bundles need a way to describe how all their resources
+map to URLs in the target origin. If it is possible for bundles to contain
+content from multiple origins, content from other origins won't be accessible
+after transfer without first making a request to the other origin.<a href="#section-5.4.1-2" class="pilcrow">¶</a></p>
+<p id="section-5.4.1-3">Content loaded from a bundle MUST NOT be made available for use by origins
+other than the target origin. For example, if the bundle includes a script that
+maps to a URL on the target origin and a site at another origin loads that
+script, then the user agent fetches the script. The user agent MAY use a
+conditional request with If-None-Digest <span>[<a href="#IF-DIGEST" class="xref">IF-DIGEST</a>]</span> and the Digest header
+field <span>[<a href="#DIGEST" class="xref">DIGEST</a>]</span> to reduce the overhead of
+these requests at its discretion, noting that this might introduce observable
+timing signals.<a href="#section-5.4.1-3" class="pilcrow">¶</a></p>
+<p id="section-5.4.1-4">Restricting content to use by the target origin avoids the negative effects
+described in <span>[<a href="#SRI-ADDRESSABLE" class="xref">SRI-ADDRESSABLE</a>]</span>. The target origin is required to demonstrate
+knowledge of the contents of the bundle, which prevents that origin from being
+poisoned by an attacker. For origins other than the target origin, content
+cannot be emplaced through the use of a bundle.<a href="#section-5.4.1-4" class="pilcrow">¶</a></p>
+<p id="section-5.4.1-5">Alternative methods for transfer of content might require per-resource
+confirmation by the origin. That might be loosened so that resources that use
+Subresource Integrity <span>[<a href="#SRI" class="xref">SRI</a>]</span> do not require confirmation. But that increases
+the need to provide integrity attributes at the point that resources are
+referred to. If content is fetched programmatically, that might be
+operationally challenging.<a href="#section-5.4.1-5" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="transfer-storage">
+<section id="section-5.4.2">
+          <h4 id="name-transfer-of-storage">
+<a href="#section-5.4.2" class="section-number selfRef">5.4.2. </a><a href="#name-transfer-of-storage" class="section-name selfRef">Transfer of Storage</a>
+          </h4>
+<p id="section-5.4.2-1">Upon transfer, any indexedDB databases <span>[<a href="#INDEXEDDB" class="xref">INDEXEDDB</a>]</span> are transferred to the
+target origin.  The names of any databases are prefixed with the origin from
+which they came.  If a database with the same name exists at the destination, a
+new name is selected.<a href="#section-5.4.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.4.2-2">The event that indicates transfer will list the databases that were
+transferred, their names and any name changes.<a href="#section-5.4.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="transfer-permissions">
+<section id="section-5.4.3">
+          <h4 id="name-transfer-of-permissions">
+<a href="#section-5.4.3" class="section-number selfRef">5.4.3. </a><a href="#name-transfer-of-permissions" class="section-name selfRef">Transfer of Permissions</a>
+          </h4>
+<p id="section-5.4.3-1">As part of a state transfer, any persistent permissions that a user granted the
+content-based origin might be transferred to the target origin.<a href="#section-5.4.3-1" class="pilcrow">¶</a></p>
+<p id="section-5.4.3-2">Whether any given permission is transferred and what conditions are attached to
+the transferral will depend on the policy of the user agent. It might be
+considered best to discard permissions and request each anew as necessary. As
+transferral is a one-time event, causing prompts to be reinitiated might not be
+too much of an imposition.<a href="#section-5.4.3-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="navigation">
+<section id="section-5.5">
+        <h3 id="name-navigation-transfers">
+<a href="#section-5.5" class="section-number selfRef">5.5. </a><a href="#name-navigation-transfers" class="section-name selfRef">Navigation Transfers</a>
+        </h3>
+<p id="section-5.5-1">Initiating transfer on navigation enables pre-loading of content from bundles.<a href="#section-5.5-1" class="pilcrow">¶</a></p>
+<p id="section-5.5-2">To address this use case, the user agent navigates to a bundle.  That bundle
+might be served from the site providing the link to ensure that information
+about the linking page is not revealed to the target origin prior to navigation.<a href="#section-5.5-2" class="pilcrow">¶</a></p>
+<p id="section-5.5-3">Navigating to the bundle causes an immediate load of the content of the bundle.
+This assumes that there is either a URL component that specifies a single entry
+point for the bundle or that the bundle itself identifies the entrypoint.<a href="#section-5.5-3" class="pilcrow">¶</a></p>
+<p id="section-5.5-4">If a transfer target URL is specified for the target resource, the user agent
+navigates to that URL. The user agent MUST fetch the transfer target URL and
+include a Sec-Content-Origin header field in the request as described in
+<a href="#transfer" class="xref">Section 5</a>. This request MAY also include the ETag header field from the
+bundled content.<a href="#section-5.5-4" class="pilcrow">¶</a></p>
+<p id="section-5.5-5">Using If-None-Digest <span>[<a href="#IF-DIGEST" class="xref">IF-DIGEST</a>]</span> allows the resource at the transfer target
+URL to return a 304 (Not Modified) status code in response to a request if the
+content provided in the bundle known to the server to be sufficient.<a href="#section-5.5-5" class="pilcrow">¶</a></p>
+<p id="section-5.5-6">The result is that the state from the bundle is transferred to the target
+origin.  As the navigation is immediate, no state will have been created within
+the bundle so the transfer of state can be skipped by the browser if navigation
+from a previously unused content-based origin is successful.  It is possible
+that the content-based origin might have previously used, in which case state
+transferrance might occur.<a href="#section-5.5-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="communication-between-origins">
+<section id="section-5.6">
+        <h3 id="name-communication-between-origi">
+<a href="#section-5.6" class="section-number selfRef">5.6. </a><a href="#name-communication-between-origi" class="section-name selfRef">Communication Between Origins</a>
+        </h3>
+<p id="section-5.6-1">Without knowledge of the content of a resource, or bundle of resources, a
+content-based origin will be impossible to guess.  This means that communication
+is only possible if the frame in which the content is loaded by the origin
+attempting communication, or the content is known to that origin.<a href="#section-5.6-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-6">
+      <h2 id="name-security-considerations">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-6-1">This design avoids questions about having to attribute authority to a static
+bundle of content.  Instead, it creates a new origin type and enables the
+transfer of state from one origin to another.  The target origin can decide
+whether to accept a transfer, thereby avoiding any questions of poisoning of
+content.  If content is found to be compromised, an origin can subsequently
+refuse to accept a transfer from that content.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">Transfer of state to an origin with an "http://" origin is not possible.  This
+mechanism depends on the target origin being strongly authenticated.<a href="#section-6-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-7">
+      <h2 id="name-iana-considerations">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-7-1">[[TODO: Register the Sec-Content-Origin header field.  Probably a lot more.]]<a href="#section-7-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<section id="section-8">
+      <h2 id="name-references">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<section id="section-8.1">
+        <h3 id="name-normative-references">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="BASE64">[BASE64]</dt>
+<dd>
+<span class="refAuthor">Josefsson, S.</span>, <span class="refTitle">"The Base16, Base32, and Base64 Data Encodings"</span>, <span class="seriesInfo">RFC 4648</span>, <span class="seriesInfo">DOI 10.17487/RFC4648</span>, <time datetime="2006-10">October 2006</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc4648">https://www.rfc-editor.org/info/rfc4648</a>&gt;</span>. </dd>
+<dt id="BUNDLE">[BUNDLE]</dt>
+<dd>
+<span class="refAuthor">Yasskin, J.</span>, <span class="refTitle">"Bundled HTTP Exchanges"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-yasskin-wpack-bundled-exchanges-02</span>, <time datetime="2019-09-26">26 September 2019</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-yasskin-wpack-bundled-exchanges-02.txt">http://www.ietf.org/internet-drafts/draft-yasskin-wpack-bundled-exchanges-02.txt</a>&gt;</span>. </dd>
+<dt id="HTTP">[HTTP]</dt>
+<dd>
+<span class="refAuthor">Fielding, R.</span><span class="refAuthor">, Nottingham, M.</span><span class="refAuthor">, and J. Reschke</span>, <span class="refTitle">"HTTP Semantics"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-httpbis-semantics-07</span>, <time datetime="2020-03-07">7 March 2020</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-ietf-httpbis-semantics-07.txt">http://www.ietf.org/internet-drafts/draft-ietf-httpbis-semantics-07.txt</a>&gt;</span>. </dd>
+<dt id="NI">[NI]</dt>
+<dd>
+<span class="refAuthor">Farrell, S.</span><span class="refAuthor">, Kutscher, D.</span><span class="refAuthor">, Dannewitz, C.</span><span class="refAuthor">, Ohlman, B.</span><span class="refAuthor">, Keranen, A.</span><span class="refAuthor">, and P. Hallam-Baker</span>, <span class="refTitle">"Naming Things with Hashes"</span>, <span class="seriesInfo">RFC 6920</span>, <span class="seriesInfo">DOI 10.17487/RFC6920</span>, <time datetime="2013-04">April 2013</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc6920">https://www.rfc-editor.org/info/rfc6920</a>&gt;</span>. </dd>
+<dt id="ORIGIN">[ORIGIN]</dt>
+<dd>
+<span class="refAuthor">Barth, A.</span>, <span class="refTitle">"The Web Origin Concept"</span>, <span class="seriesInfo">RFC 6454</span>, <span class="seriesInfo">DOI 10.17487/RFC6454</span>, <time datetime="2011-12">December 2011</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc6454">https://www.rfc-editor.org/info/rfc6454</a>&gt;</span>. </dd>
+<dt id="RFC2119">[RFC2119]</dt>
+<dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc2119">https://www.rfc-editor.org/info/rfc2119</a>&gt;</span>. </dd>
+<dt id="RFC8174">[RFC8174]</dt>
+<dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8174">https://www.rfc-editor.org/info/rfc8174</a>&gt;</span>. </dd>
+<dt id="SH">[SH]</dt>
+<dd>
+<span class="refAuthor">Nottingham, M.</span><span class="refAuthor"> and P. Kamp</span>, <span class="refTitle">"Structured Headers for HTTP"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-httpbis-header-structure-14</span>, <time datetime="2020-01-28">28 January 2020</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-ietf-httpbis-header-structure-14.txt">http://www.ietf.org/internet-drafts/draft-ietf-httpbis-header-structure-14.txt</a>&gt;</span>. </dd>
+<dt id="SXG">[SXG]</dt>
+<dd>
+<span class="refAuthor">Yasskin, J.</span>, <span class="refTitle">"Signed HTTP Exchanges"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-yasskin-http-origin-signed-responses-08</span>, <time datetime="2019-11-04">4 November 2019</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-yasskin-http-origin-signed-responses-08.txt">http://www.ietf.org/internet-drafts/draft-yasskin-http-origin-signed-responses-08.txt</a>&gt;</span>. </dd>
+</dl>
+</section>
+<section id="section-8.2">
+        <h3 id="name-informative-references">
+<a href="#section-8.2" class="section-number selfRef">8.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="CLEAR-DATA">[CLEAR-DATA]</dt>
+<dd>
+<span class="refAuthor">West, M.</span>, <span class="refTitle">"Clear Site Data"</span>, <span class="seriesInfo">W3C ED</span>, <time datetime="2017-11-13">13 November 2017</time>, <span>&lt;<a href="https://w3c.github.io/webappsec-clear-site-data/">https://w3c.github.io/webappsec-clear-site-data/</a>&gt;</span>. </dd>
+<dt id="DIGEST">[DIGEST]</dt>
+<dd>
+<span class="refAuthor">Polli, R.</span><span class="refAuthor"> and L. Pardue</span>, <span class="refTitle">"Digest Headers"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-httpbis-digest-headers-01</span>, <time datetime="2019-11-03">3 November 2019</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-ietf-httpbis-digest-headers-01.txt">http://www.ietf.org/internet-drafts/draft-ietf-httpbis-digest-headers-01.txt</a>&gt;</span>. </dd>
+<dt id="HTML">[HTML]</dt>
+<dd>
+<span class="refAuthor">WhatWG, .</span>, <span class="refTitle">"HTML"</span>, <span class="seriesInfo">WhatWG Living Standard</span>, <time datetime="2020-03-04">4 March 2020</time>, <span>&lt;<a href="https://html.spec.whatwg.org/">https://html.spec.whatwg.org/</a>&gt;</span>. </dd>
+<dt id="IF-DIGEST">[IF-DIGEST]</dt>
+<dd>
+<span class="refAuthor">Thomson, M.</span>, <span class="refTitle">"Conditional HTTP Requests Using Digests"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-thomson-http-if-digest-00</span>, <time datetime="2020-03-09">9 March 2020</time>, <span>&lt;<a href="https://tools.ietf.org/html/draft-thomson-http-if-digest-00">https://tools.ietf.org/html/draft-thomson-http-if-digest-00</a>&gt;</span>. </dd>
+<dt id="INDEXEDDB">[INDEXEDDB]</dt>
+<dd>
+<span class="refAuthor">Alabbas, A.</span><span class="refAuthor"> and J. Bell</span>, <span class="refTitle">"Indexed Database API 3.0"</span>, <span class="seriesInfo">W3C ED</span>, <time datetime="2020-02-29">29 February 2020</time>, <span>&lt;<a href="https://w3c.github.io/IndexedDB/">https://w3c.github.io/IndexedDB/</a>&gt;</span>. </dd>
+<dt id="LOADING">[LOADING]</dt>
+<dd>
+<span class="refAuthor">Yasskin, J.</span>, <span class="refTitle">"Loading Signed Exchanges"</span>, <time datetime="2020-02-21">21 February 2020</time>, <span>&lt;<a href="https://wicg.github.io/webpackage/loading.html">https://wicg.github.io/webpackage/loading.html</a>&gt;</span>. </dd>
+<dt id="PERMISSIONS">[PERMISSIONS]</dt>
+<dd>
+<span class="refAuthor">Lamouri, M.</span><span class="refAuthor">, Cáceres, M.</span><span class="refAuthor">, and J. Yasskin</span>, <span class="refTitle">"Permissions"</span>, <span class="seriesInfo">W3C ED</span>, <time datetime="2019-10-30">30 October 2019</time>, <span>&lt;<a href="https://w3c.github.io/permissions/">https://w3c.github.io/permissions/</a>&gt;</span>. </dd>
+<dt id="SERVICE-WORKERS">[SERVICE-WORKERS]</dt>
+<dd>
+<span class="refAuthor">Russell, A.</span><span class="refAuthor">, Song, J.</span><span class="refAuthor">, Archibald, J.</span><span class="refAuthor">, and M. Kruisselbrink</span>, <span class="refTitle">"Service Workers 1"</span>, <span class="seriesInfo">W3C ED</span>, <time datetime="2020-02-24">24 February 2020</time>, <span>&lt;<a href="https://w3c.github.io/ServiceWorker/v1/">https://w3c.github.io/ServiceWorker/v1/</a>&gt;</span>. </dd>
+<dt id="SHA-2">[SHA-2]</dt>
+<dd>
+<span class="refAuthor">Eastlake 3rd, D.</span><span class="refAuthor"> and T. Hansen</span>, <span class="refTitle">"US Secure Hash Algorithms (SHA and SHA-based HMAC and HKDF)"</span>, <span class="seriesInfo">RFC 6234</span>, <span class="seriesInfo">DOI 10.17487/RFC6234</span>, <time datetime="2011-05">May 2011</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc6234">https://www.rfc-editor.org/info/rfc6234</a>&gt;</span>. </dd>
+<dt id="SRI">[SRI]</dt>
+<dd>
+<span class="refAuthor">Akhawe, D.</span><span class="refAuthor">, Braun, F.</span><span class="refAuthor">, Marier, F.</span><span class="refAuthor">, and J. Weinberger</span>, <span class="refTitle">"Subresource Integrity"</span>, <span class="seriesInfo">W3C ED</span>, <time datetime="2020-01-04">4 January 2020</time>, <span>&lt;<a href="https://w3c.github.io/webappsec-subresource-integrity/">https://w3c.github.io/webappsec-subresource-integrity/</a>&gt;</span>. </dd>
+<dt id="SRI-ADDRESSABLE">[SRI-ADDRESSABLE]</dt>
+<dd>
+<span class="refAuthor">Hill, B.</span>, <span class="refTitle">"Subresource Integrity Addressable Caching"</span>, <time datetime="2016-10-15">15 October 2016</time>, <span>&lt;<a href="https://hillbrad.github.io/sri-addressable-caching/sri-addressable-caching.html">https://hillbrad.github.io/sri-addressable-caching/sri-addressable-caching.html</a>&gt;</span>. </dd>
+<dt id="TLS">[TLS]</dt>
+<dd>
+<span class="refAuthor">Rescorla, E.</span>, <span class="refTitle">"The Transport Layer Security (TLS) Protocol Version 1.3"</span>, <span class="seriesInfo">RFC 8446</span>, <span class="seriesInfo">DOI 10.17487/RFC8446</span>, <time datetime="2018-08">August 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8446">https://www.rfc-editor.org/info/rfc8446</a>&gt;</span>. </dd>
+<dt id="UNSIGNED">[UNSIGNED]</dt>
+<dd>
+<span class="refAuthor">Yasskin, J.</span>, <span class="refTitle">"Navigation to Unsigned Web Bundles"</span>, <time datetime="2020-02-20">20 February 2020</time>, <span>&lt;<a href="https://github.com/WICG/webpackage/blob/master/explainers/navigation-to-unsigned-bundles.md">https://github.com/WICG/webpackage/blob/master/explainers/navigation-to-unsigned-bundles.md</a>&gt;</span>. </dd>
+</dl>
+</section>
+</section>
+<div id="acknowledgments">
+<section id="section-appendix.a">
+      <h2 id="name-acknowledgments">
+<a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="section-appendix.a-1">This work is hardly original, nor is it an individual effort. [[TODO:
+acknowledge.]]<a href="#section-appendix.a-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="section-appendix.b">
+      <h2 id="name-authors-address">
+<a href="#name-authors-address" class="section-name selfRef">Author's Address</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Martin Thomson</span></div>
+<div dir="auto" class="left"><span class="org">Mozilla</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:mt@lowentropy.net" class="email">mt@lowentropy.net</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
