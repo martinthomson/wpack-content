@@ -45,6 +45,17 @@ informative:
         ins: WhatWG
         org: WhatWG
 
+  IF-DIGEST:
+    title: "Conditional HTTP Requests Using Digests"
+    seriesinfo:
+      Internet-Draft: draft-thomson-http-if-digest-00
+    date: 2020-03-09
+    target: "https://tools.ietf.org/html/draft-thomson-http-if-digest-00"
+    author:
+      -
+        name: Martin Thomson
+        organization: Mozilla
+
   INDEXEDDB:
     title: "Indexed Database API 3.0"
     seriesinfo:
@@ -310,6 +321,13 @@ Note:
   they require that the browser be online initially to load the service worker
   script. This design requires no prior interaction with the target origin.
 
+Relative to content-based origins, the use of signatures avoids the need to
+connect to the target origin and confirm knowledge of the content. For cases
+where the transition to online status is intended to be immediate, signed
+exchanges allow a redirect to happen without any requests being made. A signed
+exchange will therefore display content that is attributed to the target origin
+faster.
+
 Failure to validate a signature causes a redirect to an online location. If the
 client is offline, that origin will be inaccessible. If the client is online,
 none of the optimizations afforded by the bundle are available and this appears
@@ -398,7 +416,8 @@ Design Note:
   for bundled content.  It would then be possible to reference content in a
   bundle from outside the bundle, and internal references could be
   canonicalized. Importantly, state transfer could also be initiated *toward*
-  another bundle.  That could be useful for upgrading bundles.
+  another bundle.  That could be used to upgrade bundles and other nice
+  features.
 
 This definition of origin for named information (`ni://`) URIs extends the
 definition of origin in Section 4 of {{!ORIGIN}}.
@@ -589,38 +608,37 @@ might prompt before transferring permissions {{PERMISSIONS}}; see
 
 ### Transfer of Content {#transfer-content}
 
-A bundle contains multiple resources that might be usable by the origin to which
-state is transferred.  Content that would otherwise be requested from the
-target origin can be loaded instead from the bundle.  However, this is only
-possible for content loaded by the target origin.
+How content that is delivered in the bundle is used by the target origin is
+probably the most important aspect of any design in this space. This document
+proposes that all content in the bundle is adopted by the origin after a
+transfer completes.
 
-For content on the origin to which state was transferred, content MAY be loaded
-from the bundle based on a hash of the content.  Links to resources from the
-target origin that include a Subresource Integrity attribute {{SRI}} can be
-loaded if the content matches the `metadataList` derived from the integrity
-attribute.  This avoids the negative effects described in {{SRI-ADDRESSABLE}} as
-the target origin is required to demonstrate knowledge of the contents of the
-bundle.
+This design means that bundles need a way to describe how all their resources
+map to URLs in the target origin. If it is possible for bundles to contain
+content from multiple origins, content from other origins won't be accessible
+after transfer without first making a request to the other origin.
 
-A bundle could contain content that is ordinarily available from origins other
-than the target origin.  Content from other origins MAY be loaded by the target
-origin using the bundle in place of making the request to those other origins
-directly.
+Content loaded from a bundle MUST NOT be made available for use by origins
+other than the target origin. For example, if the bundle includes a script that
+maps to a URL on the target origin and a site at another origin loads that
+script, then the user agent fetches the script. The user agent MAY use a
+conditional request with If-None-Digest {{IF-DIGEST}} and the Digest header
+field {{?DIGEST=I-D.ietf-httpbis-digest-headers}} to reduce the overhead of
+these requests at its discretion, noting that this might introduce observable
+timing signals.
 
-Content loaded from a bundle MUST NOT be cached for use by origins other than
-the target origin.
+Restricting content to use by the target origin avoids the negative effects
+described in {{SRI-ADDRESSABLE}}. The target origin is required to demonstrate
+knowledge of the contents of the bundle, which prevents that origin from being
+poisoned by an attacker. For origins other than the target origin, content
+cannot be emplaced through the use of a bundle.
 
-A server might use the Digest header field
-{{?DIGEST=I-D.ietf-httpbis-digest-headers}} to indicate that content matches
-content from a bundle. A client might not know what content from the bundle
-corresponds to a given resource, but it can include a Want-Digest header field
-in requests that might result in content that is loaded from the bundle.  For
-instance, if content sourced from a bundle refers to a resource in the bundle
-with a relative URL and the same content for the referring content is provided
-by a server, then a user agent might infer that it is possible that referenced
-content will match what appears in the bundle.
-
-\[\[TODO: is there a case here for a conditional If-Digest header field here?]]
+Alternative methods for transfer of content might require per-resource
+confirmation by the origin. That might be loosened so that resources that use
+Subresource Integrity {{SRI}} do not require confirmation. But that increases
+the need to provide integrity attributes at the point that resources are
+referred to. If content is fetched programmatically, that might be
+operationally challenging.
 
 
 ### Transfer of Storage {#transfer-storage}
@@ -640,10 +658,10 @@ As part of a state transfer, any persistent permissions that a user granted the
 content-based origin might be transferred to the target origin.
 
 Whether any given permission is transferred and what conditions are attached to
-the transferral will depend on the policy of the user agent.  It might be
-considered best to discard permissions and request them anew.  As transferrance
-is a one-time event, causing prompts to be reinitiated might not be too much of
-an imposition.
+the transferral will depend on the policy of the user agent. It might be
+considered best to discard permissions and request each anew as necessary. As
+transferral is a one-time event, causing prompts to be reinitiated might not be
+too much of an imposition.
 
 
 ## Navigation Transfers {#navigation}
@@ -664,12 +682,9 @@ include a Sec-Content-Origin header field in the request as described in
 {{transfer}}. This request MAY also include the ETag header field from the
 bundled content.
 
-The resource at the transfer target URL might return a 304 (Not Modified) status
-code in response to a request that contains a Sec-Content-Origin header field if
-the content provided in the bundle known to the server to be sufficient.
-
-\[\[TBD: Maybe it is best not to overload this header field with semantics of a
-conditional request and the above If-Digest is the right approach.]]
+Using If-None-Digest {{IF-DIGEST}} allows the resource at the transfer target
+URL to return a 304 (Not Modified) status code in response to a request if the
+content provided in the bundle known to the server to be sufficient.
 
 The result is that the state from the bundle is transferred to the target
 origin.  As the navigation is immediate, no state will have been created within
