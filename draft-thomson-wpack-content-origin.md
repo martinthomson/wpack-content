@@ -204,14 +204,16 @@ over state established by one origin to another, this allows content to be
 delivered offline and used with the ability to transition to a full online
 interaction with a web server.
 
-Alternative designs attempt to provide a means to ascribe an HTTPS origin to
-content through the use of signatures
-{{!SXG=I-D.yasskin-http-origin-signed-responses}}.  Those designs depend on
+Content-based origins are proposed as an alternative to signed exchanges
+{{!SXG=I-D.yasskin-http-origin-signed-responses}}, which ascribe an HTTPS
+origin to content through the use of signatures. Signed exchanges depends on
 finding a way to modify the core concept of web origins that allows for
-object-based authority.  This avoids the problems associated with transfer of
-state between origins.  However, a fundamental change to the way in which
-authority is determined requires the use of a number of safeguards.  These
-safeguards contain both technical mechanisms and usage constraints.
+object-based authority. Signed exchanges avoid any problems arising from
+transfer of state between origins. However, a fundamental change to the way in
+which authority is determined requires the use of a number of safeguards. These
+safeguards contain both technical mechanisms and usage constraints. These
+constraints could be operationally challenging to meet, but violating them
+could have consequences for security.
 
 
 # Conventions and Definitions
@@ -227,20 +229,20 @@ This document uses the term "user agent" consistent with the usage in both
 
 # Overview and Comparisons
 
-This section provides an overview of how these tools might be used. This
-section compares designs.
+This section provides an overview of how content-based origins might be used
+and compares that to designs based on signed exchanges.
 
-The most interesting scenario is understanding the transition from an state
-where the target origin has not been contacted (that is, the user agent is
-either offline or effectively so), to one where the user agent contacts the
-target origin (the user agent is online).
+The most interesting scenario involves the transition from an state where the
+target origin has not been contacted (that is, the user agent is either offline
+or effectively so), to one where the user agent contacts the target origin (the
+user agent is online).
 
 
 ## Offline-to-Online Transition for Content-Based Origins
 
-In this proposal, content is loaded from a bundle. After loading the bundle,
-the browser treats content in the bundle as existing in an origin unique to the
-content of the bundle; see {{content-origin}}.
+For a content-based origin, content is loaded from a bundle. After loading the
+bundle, the browser treats content in the bundle as existing in an origin
+unique to the content of the bundle; see {{content-origin}}.
 
 If the bundle contains a transfer target URL (see {{transfer-target}}), the
 browser then attempts to load that resource, providing an indication to the
@@ -353,11 +355,11 @@ validity periods, and a range of limitations on the types of content that can
 be signed.
 
 In comparison, content-based origins do not require signatures. Questions of
-validity only apply at the point that a state transfer is initiated. However,
+validity only apply at the point that a state transfer is attempted. However,
 this has drawbacks also. Content is not attributed to origins and state is not
-available to an online origin until a transfer is initiated. This avoids the
-complexity inherent to merging two different security models. Additionally, the
-process of state transfer is likely quite complicated in practice.
+available to an online origin until a transfer is complete. This avoids the
+complexity inherent to merging two different security models, but the process
+of state transfer could be quite complicated in practice.
 
 In terms of usability, the identity attributed to content from a content-based
 origin is opaque and not particularly relatable. Though state might eventually
@@ -440,7 +442,7 @@ unambiguously different, this ensures that the same content to be interpreted as
 valid for both content types.
 
 
-## Hash Agility
+## Hash Agility {#hash-agility}
 
 This design depends to some extent on the hash algorithm remaining constant
 during the time that the content-based origin is used.  A change in hash
@@ -454,11 +456,11 @@ the window.postMessage API {{HTML}} allows content to target a specific origin
 for sending messages and to identify the source origin of incoming messages.
 
 For the purposes of determining equality, user agents might consider hashes of
-the same content with different hash algorithms to be equal.  For instance, a
+the same content with different hash algorithms to be equal. For instance, a
 user agent might consider `sha-256:ypeBEsobvcr6wjGzmiPcTaeG7_gUfE5yuYB3ha_uSLs`
-to be equal to `sha-384;VKWbnyKwuAiA2EJ-VIt8I6vYc0huHwNd
-zpzWl-hRdQM8qojm1XvDXvrgta_TFF8x` (note space added to meet formatting
-constraints).  This requires that this equivalence is known to the user agent.
+to be equal to
+`sha-384;VKWbnyKwuAiA2EJ-VIt8I6vYc0huHwNdzpzWl-hRdQM8qojm1XvDXvrgta_TFF8x`.
+This requires that this equivalence is known to the user agent.
 
 Of the hash algorithms defined in {{?NI}}, only "sha-256" is permitted for use
 with content-based origins.  This usage has no need for a truncated hash as the
@@ -525,6 +527,13 @@ Sec-Content-Origin:
 
 A user agent that automatically follows redirections (3xx status codes) MUST
 allow the server to redirect to a resource that provides the response.
+Redirection can change the origin that ultimately accepts the transfer. Any
+redirection to an origin that is not strongly authenticated MUST cause the
+transfer to fail.
+
+After a successful transfer, the user agent MAY treat the content-based origin
+as an alias for the origin to which state was transferred. This aliasing might
+be particularly useful in addressing hash agility; see {{hash-agility}}.
 
 
 ## Unsuccessful Transfer
@@ -534,15 +543,18 @@ contacted successfully, the content-based origin continues to exist.  Any API
 might indicate that the attempt failed.  Failure to transfer state is expected
 when the user agent is offline.  After failing to contact the target origin, a
 transfer can be attempted at a later time.  This causes navigation to fail and
-the user agent MAY display a URL from the content-based origin (TODO: this
-requires that we define a means of identification for content inside bundles).
+the user agent MAY display a URL from the content-based origin.
+
+\[\[TODO: Again, this requires that we define a means of identification for
+content inside bundles.]]
 
 A valid, final HTTP response that indicates anything other than a server error
-(that is, 5xx status codes) without including the hash pre-image in the response
-MUST be treated as a failed migration.  After a failed migration, information
-about the target origin SHOULD be removed from interfaces related to the
-content-based origin, except for diagnostic purposes.  The content-based origin
-can continue to exist but further attempts to transfer state MUST immediately
+(that is, 5xx status codes) or lack of authority (the 421 status code
+{{!HTTP2=RFC7540}}) without including the hash pre-image in the response MUST
+be treated as a failed migration. After a failed migration, information about
+the target origin SHOULD be removed from interfaces related to the
+content-based origin, except for diagnostic purposes. The content-based origin
+MAY continue to exist but further attempts to transfer state MUST immediately
 fail.
 
 After a valid HTTP response, the user agent navigates to the transfer target URL
