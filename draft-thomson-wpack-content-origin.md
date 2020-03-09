@@ -163,7 +163,8 @@ web origin enables new means of acquiring content.  This document describes a
 method for taking application state accumulated by an offline user agent in
 relation to a piece of content and making that state available in a fully online
 context.  This enables continuous use of content, starting from a state where
-the user agent does not contact an origin and ending with
+the user agent does not contact an origin and ending with online
+interactions with an HTTPS origin.
 
 This document proposes an update to the definition of Origin in RFC 6454.  It
 also proposes changes that would affect HTML, which is outside of the remit of
