@@ -1,9 +1,8 @@
 *~
 /*-[0-9][0-9].xml
 *.html
-issues.json
+archive.json
 *.pdf
-pulls.json
 *.redxml
 .refcache
 report.xml
