@@ -12,7 +12,8 @@ web origin enables new means of acquiring content.  This document describes a
 method for taking application state accumulated by an offline user agent in
 relation to a piece of content and making that state available in a fully online
 context.  This enables continuous use of content, starting from a state where
-the user agent does not contact an origin and ending with 
+the user agent does not contact an origin and ending with online
+interactions with an HTTPS origin. 
        This document proposes an update to the definition of Origin in RFC 6454.  It
 also proposes changes that would affect HTML, which is outside of the remit of
 the IETF. 
@@ -34,7 +35,7 @@ html {
   --small-font-size: 14.5px;
 }
 body {
-  max-width: 624px;
+  max-width: 600px;
   margin: 75px auto;
   padding: 0 5px;
   color: var(--text-color);
@@ -212,7 +213,9 @@ tt, code, pre {
 }
 pre {
   border: 1px solid var(--line-color);
-  line-height: 17px;
+  font-size: 13.5px;
+  line-height: 16px;
+  letter-spacing: -0.2px;
   margin: 5px;
   padding: 5px;
 }
@@ -440,7 +443,7 @@ hr {
   font-weight: 700;
 }
 /* make the index two-column on all but the smallest screens */
-@media (min-width: 600px) {
+@media (min-width: 500px) {
   .index ul {
     column-count: 2;
     column-gap: 20px;
@@ -475,14 +478,14 @@ hr.addr {
   color: #ddd;
   max-width: calc(100% - 16px);
 }
-@media (min-width: 600px) {
+@media (min-width: 500px) {
   #authors-addresses > section {
     display: relative;
     padding: 32px 0 0;
     column-count: 2;
     column-gap: 20px;
   }
-  #name-authors-address {
+  #name-authors-addresses {
     position: absolute;
     top: 0px;
     column-span: all;
@@ -518,7 +521,7 @@ hr.addr {
   font-style: italic;
 }
 /* alternative layout for smaller screens */
-@media screen and (max-width: 953px) {
+@media screen and (max-width: 929px) {
   #toc {
     position: fixed;
     z-index: 2;
@@ -584,9 +587,10 @@ hr.addr {
 }
 
 /* alternative layout for wide screens */
-@media screen and (min-width: 954px) {
+@media screen and (min-width: 930px) {
   body {
-    padding-right: 380px;
+    padding-right: 360px;
+    padding-right: calc(min(180px + 20%, 500px));
   }
   #toc {
     position: fixed;
@@ -728,16 +732,13 @@ dl.dlNewline > dt {
 }
 
 /* Provide styling for table cell text alignment */
-table td.text-left,
-table th.text-left {
+table .text-left, table .text-left {
   text-align: left;
 }
-table td.text-center,
-table th.text-center {
+table .text-center, table .text-center {
   text-align: center;
 }
-table td.text-right,
-table th.text-right {
+table .text-right, table .text-right {
   text-align: right;
 }
 
@@ -837,7 +838,7 @@ table.left {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Thomson</td>
-<td class="center">Expires 10 September 2020</td>
+<td class="center">Expires 25 September 2020</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -853,12 +854,12 @@ table.left {
 <a href="https://www.rfc-editor.org/rfc/rfc6454" class="eref">6454</a> (if approved)</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2020-03-09" class="published">9 March 2020</time>
+<time datetime="2020-03-24" class="published">24 March 2020</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2020-09-10">10 September 2020</time></dd>
+<dd class="expires"><time datetime="2020-09-25">25 September 2020</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -876,7 +877,8 @@ web origin enables new means of acquiring content.  This document describes a
 method for taking application state accumulated by an offline user agent in
 relation to a piece of content and making that state available in a fully online
 context.  This enables continuous use of content, starting from a state where
-the user agent does not contact an origin and ending with<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+the user agent does not contact an origin and ending with online
+interactions with an HTTPS origin.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 <p id="section-abstract-2">This document proposes an update to the definition of Origin in RFC 6454.  It
 also proposes changes that would affect HTML, which is outside of the remit of
 the IETF.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
@@ -910,7 +912,7 @@ the IETF.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 10 September 2020.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 25 September 2020.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1064,14 +1066,16 @@ is based solely on that content.  Together with a means of transferring control
 over state established by one origin to another, this allows content to be
 delivered offline and used with the ability to transition to a full online
 interaction with a web server.<a href="#section-1-5" class="pilcrow">¶</a></p>
-<p id="section-1-6">Alternative designs attempt to provide a means to ascribe an HTTPS origin to
-content through the use of signatures
-<span>[<a href="#SXG" class="xref">SXG</a>]</span>.  Those designs depend on
+<p id="section-1-6">Content-based origins are proposed as an alternative to signed exchanges
+<span>[<a href="#SXG" class="xref">SXG</a>]</span>, which ascribe an HTTPS
+origin to content through the use of signatures. Signed exchanges depends on
 finding a way to modify the core concept of web origins that allows for
-object-based authority.  This avoids the problems associated with transfer of
-state between origins.  However, a fundamental change to the way in which
-authority is determined requires the use of a number of safeguards.  These
-safeguards contain both technical mechanisms and usage constraints.<a href="#section-1-6" class="pilcrow">¶</a></p>
+object-based authority. Signed exchanges avoid any problems arising from
+transfer of state between origins. However, a fundamental change to the way in
+which authority is determined requires the use of a number of safeguards. These
+safeguards contain both technical mechanisms and usage constraints. These
+constraints could be operationally challenging to meet, but violating them
+could have consequences for security.<a href="#section-1-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="conventions-and-definitions">
@@ -1092,20 +1096,20 @@ when, and only when, they appear in all capitals, as shown here.<a href="#sectio
       <h2 id="name-overview-and-comparisons">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-overview-and-comparisons" class="section-name selfRef">Overview and Comparisons</a>
       </h2>
-<p id="section-3-1">This section provides an overview of how these tools might be used. This
-section compares designs.<a href="#section-3-1" class="pilcrow">¶</a></p>
-<p id="section-3-2">The most interesting scenario is understanding the transition from an state
-where the target origin has not been contacted (that is, the user agent is
-either offline or effectively so), to one where the user agent contacts the
-target origin (the user agent is online).<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-1">This section provides an overview of how content-based origins might be used
+and compares that to designs based on signed exchanges.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">The most interesting scenario involves the transition from an state where the
+target origin has not been contacted (that is, the user agent is either offline
+or effectively so), to one where the user agent contacts the target origin (the
+user agent is online).<a href="#section-3-2" class="pilcrow">¶</a></p>
 <div id="offline-to-online-transition-for-content-based-origins">
 <section id="section-3.1">
         <h3 id="name-offline-to-online-transitio">
 <a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-offline-to-online-transitio" class="section-name selfRef">Offline-to-Online Transition for Content-Based Origins</a>
         </h3>
-<p id="section-3.1-1">In this proposal, content is loaded from a bundle. After loading the bundle,
-the browser treats content in the bundle as existing in an origin unique to the
-content of the bundle; see <a href="#content-origin" class="xref">Section 4</a>.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-1">For a content-based origin, content is loaded from a bundle. After loading the
+bundle, the browser treats content in the bundle as existing in an origin
+unique to the content of the bundle; see <a href="#content-origin" class="xref">Section 4</a>.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
 <p id="section-3.1-2">If the bundle contains a transfer target URL (see <a href="#transfer-target" class="xref">Section 5.3</a>), the
 browser then attempts to load that resource, providing an indication to the
 target origin that a transfer from the content-based origin is possible. If the
@@ -1229,11 +1233,11 @@ signatures, there are required modifications to certificates, constraints on
 validity periods, and a range of limitations on the types of content that can
 be signed.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
 <p id="section-3.3-3">In comparison, content-based origins do not require signatures. Questions of
-validity only apply at the point that a state transfer is initiated. However,
+validity only apply at the point that a state transfer is attempted. However,
 this has drawbacks also. Content is not attributed to origins and state is not
-available to an online origin until a transfer is initiated. This avoids the
-complexity inherent to merging two different security models. Additionally, the
-process of state transfer is likely quite complicated in practice.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
+available to an online origin until a transfer is complete. This avoids the
+complexity inherent to merging two different security models, but the process
+of state transfer could be quite complicated in practice.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
 <p id="section-3.3-4">In terms of usability, the identity attributed to content from a content-based
 origin is opaque and not particularly relatable. Though state might eventually
 be adopted by some origin, communicating the true status of content could be
@@ -1334,11 +1338,11 @@ identity of the origin might be made visible to other origins.  For instance,
 the window.postMessage API <span>[<a href="#HTML" class="xref">HTML</a>]</span> allows content to target a specific origin
 for sending messages and to identify the source origin of incoming messages.<a href="#section-4.2-2" class="pilcrow">¶</a></p>
 <p id="section-4.2-3">For the purposes of determining equality, user agents might consider hashes of
-the same content with different hash algorithms to be equal.  For instance, a
+the same content with different hash algorithms to be equal. For instance, a
 user agent might consider <code>sha-256:ypeBEsobvcr6wjGzmiPcTaeG7_gUfE5yuYB3ha_uSLs</code>
-to be equal to <code>sha-384;VKWbnyKwuAiA2EJ-VIt8I6vYc0huHwNd
-zpzWl-hRdQM8qojm1XvDXvrgta_TFF8x</code> (note space added to meet formatting
-constraints).  This requires that this equivalence is known to the user agent.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+to be equal to
+<code>sha-384;VKWbnyKwuAiA2EJ-VIt8I6vYc0huHwNdzpzWl-hRdQM8qojm1XvDXvrgta_TFF8x</code>.
+This requires that this equivalence is known to the user agent.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.2-4">Of the hash algorithms defined in <span>[<a href="#NI" class="xref">NI</a>]</span>, only "sha-256" is permitted for use
 with content-based origins.  This usage has no need for a truncated hash as the
 value does not usually need to be manually entered.  Furthermore, the use of
@@ -1407,7 +1411,13 @@ Sec-Content-Origin:
 </pre><a href="#section-5.1-5" class="pilcrow">¶</a>
 </div>
 <p id="section-5.1-6">A user agent that automatically follows redirections (3xx status codes) MUST
-allow the server to redirect to a resource that provides the response.<a href="#section-5.1-6" class="pilcrow">¶</a></p>
+allow the server to redirect to a resource that provides the response.
+Redirection can change the origin that ultimately accepts the transfer. Any
+redirection to an origin that is not strongly authenticated MUST cause the
+transfer to fail.<a href="#section-5.1-6" class="pilcrow">¶</a></p>
+<p id="section-5.1-7">After a successful transfer, the user agent MAY treat the content-based origin
+as an alias for the origin to which state was transferred. This aliasing might
+be particularly useful in addressing hash agility; see <a href="#hash-agility" class="xref">Section 4.2</a>.<a href="#section-5.1-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="unsuccessful-transfer">
@@ -1420,20 +1430,22 @@ contacted successfully, the content-based origin continues to exist.  Any API
 might indicate that the attempt failed.  Failure to transfer state is expected
 when the user agent is offline.  After failing to contact the target origin, a
 transfer can be attempted at a later time.  This causes navigation to fail and
-the user agent MAY display a URL from the content-based origin (TODO: this
-requires that we define a means of identification for content inside bundles).<a href="#section-5.2-1" class="pilcrow">¶</a></p>
-<p id="section-5.2-2">A valid, final HTTP response that indicates anything other than a server error
-(that is, 5xx status codes) without including the hash pre-image in the response
-MUST be treated as a failed migration.  After a failed migration, information
-about the target origin SHOULD be removed from interfaces related to the
-content-based origin, except for diagnostic purposes.  The content-based origin
-can continue to exist but further attempts to transfer state MUST immediately
-fail.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
-<p id="section-5.2-3">After a valid HTTP response, the user agent navigates to the transfer target URL
-or any resource that was included in any redirections.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
-<p id="section-5.2-4">Any valid HTTP response, successful or not, MUST cause data associated with the
+the user agent MAY display a URL from the content-based origin.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">[[TODO: Again, this requires that we define a means of identification for
+content inside bundles.]]<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<p id="section-5.2-3">A valid, final HTTP response that indicates anything other than a server error
+(that is, 5xx status codes) or lack of authority (the 421 status code
+<span>[<a href="#HTTP2" class="xref">HTTP2</a>]</span>) without including the hash pre-image in the response MUST
+be treated as a failed migration. After a failed migration, information about
+the target origin SHOULD be removed from interfaces related to the
+content-based origin, except for diagnostic purposes. The content-based origin
+MAY continue to exist but further attempts to transfer state MUST immediately
+fail.<a href="#section-5.2-3" class="pilcrow">¶</a></p>
+<p id="section-5.2-4">After a valid HTTP response, the user agent navigates to the transfer target URL
+or any resource that was included in any redirections.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
+<p id="section-5.2-5">Any valid HTTP response, successful or not, MUST cause data associated with the
 content-based origin to be cleared as though clear-site-data were invoked
-<span>[<a href="#CLEAR-DATA" class="xref">CLEAR-DATA</a>]</span>.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
+<span>[<a href="#CLEAR-DATA" class="xref">CLEAR-DATA</a>]</span>.<a href="#section-5.2-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="transfer-target">
@@ -1634,6 +1646,9 @@ mechanism depends on the target origin being strongly authenticated.<a href="#se
 <dt id="HTTP">[HTTP]</dt>
 <dd>
 <span class="refAuthor">Fielding, R.</span><span class="refAuthor">, Nottingham, M.</span><span class="refAuthor">, and J. Reschke</span>, <span class="refTitle">"HTTP Semantics"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-httpbis-semantics-07</span>, <time datetime="2020-03-07">7 March 2020</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-ietf-httpbis-semantics-07.txt">http://www.ietf.org/internet-drafts/draft-ietf-httpbis-semantics-07.txt</a>&gt;</span>. </dd>
+<dt id="HTTP2">[HTTP2]</dt>
+<dd>
+<span class="refAuthor">Belshe, M.</span><span class="refAuthor">, Peon, R.</span><span class="refAuthor">, and M. Thomson, Ed.</span>, <span class="refTitle">"Hypertext Transfer Protocol Version 2 (HTTP/2)"</span>, <span class="seriesInfo">RFC 7540</span>, <span class="seriesInfo">DOI 10.17487/RFC7540</span>, <time datetime="2015-05">May 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc7540">https://www.rfc-editor.org/info/rfc7540</a>&gt;</span>. </dd>
 <dt id="NI">[NI]</dt>
 <dd>
 <span class="refAuthor">Farrell, S.</span><span class="refAuthor">, Kutscher, D.</span><span class="refAuthor">, Dannewitz, C.</span><span class="refAuthor">, Ohlman, B.</span><span class="refAuthor">, Keranen, A.</span><span class="refAuthor">, and P. Hallam-Baker</span>, <span class="refTitle">"Naming Things with Hashes"</span>, <span class="seriesInfo">RFC 6920</span>, <span class="seriesInfo">DOI 10.17487/RFC6920</span>, <time datetime="2013-04">April 2013</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc6920">https://www.rfc-editor.org/info/rfc6920</a>&gt;</span>. </dd>
@@ -1648,7 +1663,7 @@ mechanism depends on the target origin being strongly authenticated.<a href="#se
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8174">https://www.rfc-editor.org/info/rfc8174</a>&gt;</span>. </dd>
 <dt id="SH">[SH]</dt>
 <dd>
-<span class="refAuthor">Nottingham, M.</span><span class="refAuthor"> and P. Kamp</span>, <span class="refTitle">"Structured Headers for HTTP"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-httpbis-header-structure-14</span>, <time datetime="2020-01-28">28 January 2020</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-ietf-httpbis-header-structure-14.txt">http://www.ietf.org/internet-drafts/draft-ietf-httpbis-header-structure-14.txt</a>&gt;</span>. </dd>
+<span class="refAuthor">Nottingham, M.</span><span class="refAuthor"> and P. Kamp</span>, <span class="refTitle">"Structured Field Values for HTTP"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-httpbis-header-structure-17</span>, <time datetime="2020-03-15">15 March 2020</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-ietf-httpbis-header-structure-17.txt">http://www.ietf.org/internet-drafts/draft-ietf-httpbis-header-structure-17.txt</a>&gt;</span>. </dd>
 <dt id="SXG">[SXG]</dt>
 <dd>
 <span class="refAuthor">Yasskin, J.</span>, <span class="refTitle">"Signed HTTP Exchanges"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-yasskin-http-origin-signed-responses-08</span>, <time datetime="2019-11-04">4 November 2019</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-yasskin-http-origin-signed-responses-08.txt">http://www.ietf.org/internet-drafts/draft-yasskin-http-origin-signed-responses-08.txt</a>&gt;</span>. </dd>
@@ -1664,7 +1679,7 @@ mechanism depends on the target origin being strongly authenticated.<a href="#se
 <span class="refAuthor">West, M.</span>, <span class="refTitle">"Clear Site Data"</span>, <span class="seriesInfo">W3C ED</span>, <time datetime="2017-11-13">13 November 2017</time>, <span>&lt;<a href="https://w3c.github.io/webappsec-clear-site-data/">https://w3c.github.io/webappsec-clear-site-data/</a>&gt;</span>. </dd>
 <dt id="DIGEST">[DIGEST]</dt>
 <dd>
-<span class="refAuthor">Polli, R.</span><span class="refAuthor"> and L. Pardue</span>, <span class="refTitle">"Digest Headers"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-httpbis-digest-headers-01</span>, <time datetime="2019-11-03">3 November 2019</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-ietf-httpbis-digest-headers-01.txt">http://www.ietf.org/internet-drafts/draft-ietf-httpbis-digest-headers-01.txt</a>&gt;</span>. </dd>
+<span class="refAuthor">Polli, R.</span><span class="refAuthor"> and L. Pardue</span>, <span class="refTitle">"Digest Headers"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-httpbis-digest-headers-02</span>, <time datetime="2020-03-09">9 March 2020</time>, <span>&lt;<a href="http://www.ietf.org/internet-drafts/draft-ietf-httpbis-digest-headers-02.txt">http://www.ietf.org/internet-drafts/draft-ietf-httpbis-digest-headers-02.txt</a>&gt;</span>. </dd>
 <dt id="HTML">[HTML]</dt>
 <dd>
 <span class="refAuthor">WhatWG, .</span>, <span class="refTitle">"HTML"</span>, <span class="seriesInfo">WhatWG Living Standard</span>, <time datetime="2020-03-04">4 March 2020</time>, <span>&lt;<a href="https://html.spec.whatwg.org/">https://html.spec.whatwg.org/</a>&gt;</span>. </dd>

@@ -4,9 +4,9 @@
 
 wpack                                                         M. Thomson
 Internet-Draft                                                   Mozilla
-Updates: 6454 (if approved)                                 9 March 2020
+Updates: 6454 (if approved)                                24 March 2020
 Intended status: Standards Track                                        
-Expires: 10 September 2020
+Expires: 25 September 2020
 
 
                    Content-Based Origins for the Web
@@ -20,7 +20,8 @@ Abstract
    by an offline user agent in relation to a piece of content and making
    that state available in a fully online context.  This enables
    continuous use of content, starting from a state where the user agent
-   does not contact an origin and ending with
+   does not contact an origin and ending with online interactions with
+   an HTTPS origin.
 
    This document proposes an update to the definition of Origin in RFC
    6454.  It also proposes changes that would affect HTML, which is
@@ -52,8 +53,7 @@ Status of This Memo
 
 
 
-
-Thomson                 Expires 10 September 2020               [Page 1]
+Thomson                 Expires 25 September 2020               [Page 1]
 
 Internet-Draft            Content-Based Origins               March 2020
 
@@ -61,7 +61,7 @@ Internet-Draft            Content-Based Origins               March 2020
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 10 September 2020.
+   This Internet-Draft will expire on 25 September 2020.
 
 Copyright Notice
 
@@ -92,7 +92,7 @@ Table of Contents
    5.  Transfer to HTTPS Origin  . . . . . . . . . . . . . . . . . .  10
      5.1.  Successful Transfer . . . . . . . . . . . . . . . . . . .  10
      5.2.  Unsuccessful Transfer . . . . . . . . . . . . . . . . . .  11
-     5.3.  Transfer Target . . . . . . . . . . . . . . . . . . . . .  11
+     5.3.  Transfer Target . . . . . . . . . . . . . . . . . . . . .  12
      5.4.  State Transfer  . . . . . . . . . . . . . . . . . . . . .  12
        5.4.1.  Transfer of Content . . . . . . . . . . . . . . . . .  13
        5.4.2.  Transfer of Storage . . . . . . . . . . . . . . . . .  13
@@ -104,12 +104,12 @@ Table of Contents
    8.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  15
      8.1.  Normative References  . . . . . . . . . . . . . . . . . .  15
      8.2.  Informative References  . . . . . . . . . . . . . . . . .  16
-   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  17
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  17
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  18
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  18
 
 
 
-Thomson                 Expires 10 September 2020               [Page 2]
+Thomson                 Expires 25 September 2020               [Page 2]
 
 Internet-Draft            Content-Based Origins               March 2020
 
@@ -149,23 +149,23 @@ Internet-Draft            Content-Based Origins               March 2020
    the ability to transition to a full online interaction with a web
    server.
 
-   Alternative designs attempt to provide a means to ascribe an HTTPS
-   origin to content through the use of signatures [SXG].  Those designs
-   depend on finding a way to modify the core concept of web origins
-   that allows for object-based authority.  This avoids the problems
-   associated with transfer of state between origins.  However, a
-   fundamental change to the way in which authority is determined
-   requires the use of a number of safeguards.  These safeguards contain
-   both technical mechanisms and usage constraints.
+   Content-based origins are proposed as an alternative to signed
+   exchanges [SXG], which ascribe an HTTPS origin to content through the
+   use of signatures.  Signed exchanges depends on finding a way to
+   modify the core concept of web origins that allows for object-based
+   authority.  Signed exchanges avoid any problems arising from transfer
+   of state between origins.  However, a fundamental change to the way
+   in which authority is determined requires the use of a number of
+   safeguards.  These safeguards contain both technical mechanisms and
+   usage constraints.  These constraints could be operationally
+   challenging to meet, but violating them could have consequences for
+   security.
 
 
 
 
 
-
-
-
-Thomson                 Expires 10 September 2020               [Page 3]
+Thomson                 Expires 25 September 2020               [Page 3]
 
 Internet-Draft            Content-Based Origins               March 2020
 
@@ -183,19 +183,20 @@ Internet-Draft            Content-Based Origins               March 2020
 
 3.  Overview and Comparisons
 
-   This section provides an overview of how these tools might be used.
-   This section compares designs.
+   This section provides an overview of how content-based origins might
+   be used and compares that to designs based on signed exchanges.
 
-   The most interesting scenario is understanding the transition from an
-   state where the target origin has not been contacted (that is, the
-   user agent is either offline or effectively so), to one where the
-   user agent contacts the target origin (the user agent is online).
+   The most interesting scenario involves the transition from an state
+   where the target origin has not been contacted (that is, the user
+   agent is either offline or effectively so), to one where the user
+   agent contacts the target origin (the user agent is online).
 
 3.1.  Offline-to-Online Transition for Content-Based Origins
 
-   In this proposal, content is loaded from a bundle.  After loading the
-   bundle, the browser treats content in the bundle as existing in an
-   origin unique to the content of the bundle; see Section 4.
+   For a content-based origin, content is loaded from a bundle.  After
+   loading the bundle, the browser treats content in the bundle as
+   existing in an origin unique to the content of the bundle; see
+   Section 4.
 
    If the bundle contains a transfer target URL (see Section 5.3), the
    browser then attempts to load that resource, providing an indication
@@ -220,8 +221,7 @@ Internet-Draft            Content-Based Origins               March 2020
 
 
 
-
-Thomson                 Expires 10 September 2020               [Page 4]
+Thomson                 Expires 25 September 2020               [Page 4]
 
 Internet-Draft            Content-Based Origins               March 2020
 
@@ -277,7 +277,7 @@ Internet-Draft            Content-Based Origins               March 2020
 
 
 
-Thomson                 Expires 10 September 2020               [Page 5]
+Thomson                 Expires 25 September 2020               [Page 5]
 
 Internet-Draft            Content-Based Origins               March 2020
 
@@ -333,7 +333,7 @@ Internet-Draft            Content-Based Origins               March 2020
 
 
 
-Thomson                 Expires 10 September 2020               [Page 6]
+Thomson                 Expires 25 September 2020               [Page 6]
 
 Internet-Draft            Content-Based Origins               March 2020
 
@@ -361,11 +361,11 @@ Internet-Draft            Content-Based Origins               March 2020
 
    In comparison, content-based origins do not require signatures.
    Questions of validity only apply at the point that a state transfer
-   is initiated.  However, this has drawbacks also.  Content is not
+   is attempted.  However, this has drawbacks also.  Content is not
    attributed to origins and state is not available to an online origin
-   until a transfer is initiated.  This avoids the complexity inherent
-   to merging two different security models.  Additionally, the process
-   of state transfer is likely quite complicated in practice.
+   until a transfer is complete.  This avoids the complexity inherent to
+   merging two different security models, but the process of state
+   transfer could be quite complicated in practice.
 
    In terms of usability, the identity attributed to content from a
    content-based origin is opaque and not particularly relatable.
@@ -389,7 +389,7 @@ Internet-Draft            Content-Based Origins               March 2020
 
 
 
-Thomson                 Expires 10 September 2020               [Page 7]
+Thomson                 Expires 25 September 2020               [Page 7]
 
 Internet-Draft            Content-Based Origins               March 2020
 
@@ -445,7 +445,7 @@ Internet-Draft            Content-Based Origins               March 2020
 
 
 
-Thomson                 Expires 10 September 2020               [Page 8]
+Thomson                 Expires 25 September 2020               [Page 8]
 
 Internet-Draft            Content-Based Origins               March 2020
 
@@ -485,10 +485,9 @@ Internet-Draft            Content-Based Origins               March 2020
    hashes of the same content with different hash algorithms to be
    equal.  For instance, a user agent might consider "sha-
    256:ypeBEsobvcr6wjGzmiPcTaeG7_gUfE5yuYB3ha_uSLs" to be equal to "sha-
-   384;VKWbnyKwuAiA2EJ-VIt8I6vYc0huHwNd zpzWl-
-   hRdQM8qojm1XvDXvrgta_TFF8x" (note space added to meet formatting
-   constraints).  This requires that this equivalence is known to the
-   user agent.
+   384;VKWbnyKwuAiA2EJ-VIt8I6vYc0huHwNdzpzWl-
+   hRdQM8qojm1XvDXvrgta_TFF8x".  This requires that this equivalence is
+   known to the user agent.
 
    Of the hash algorithms defined in [NI], only "sha-256" is permitted
    for use with content-based origins.  This usage has no need for a
@@ -501,7 +500,8 @@ Internet-Draft            Content-Based Origins               March 2020
 
 
 
-Thomson                 Expires 10 September 2020               [Page 9]
+
+Thomson                 Expires 25 September 2020               [Page 9]
 
 Internet-Draft            Content-Based Origins               March 2020
 
@@ -557,7 +557,7 @@ Internet-Draft            Content-Based Origins               March 2020
 
 
 
-Thomson                 Expires 10 September 2020              [Page 10]
+Thomson                 Expires 25 September 2020              [Page 10]
 
 Internet-Draft            Content-Based Origins               March 2020
 
@@ -573,7 +573,14 @@ Internet-Draft            Content-Based Origins               March 2020
 
    A user agent that automatically follows redirections (3xx status
    codes) MUST allow the server to redirect to a resource that provides
-   the response.
+   the response.  Redirection can change the origin that ultimately
+   accepts the transfer.  Any redirection to an origin that is not
+   strongly authenticated MUST cause the transfer to fail.
+
+   After a successful transfer, the user agent MAY treat the content-
+   based origin as an alias for the origin to which state was
+   transferred.  This aliasing might be particularly useful in
+   addressing hash agility; see Section 4.2.
 
 5.2.  Unsuccessful Transfer
 
@@ -583,17 +590,19 @@ Internet-Draft            Content-Based Origins               March 2020
    to transfer state is expected when the user agent is offline.  After
    failing to contact the target origin, a transfer can be attempted at
    a later time.  This causes navigation to fail and the user agent MAY
-   display a URL from the content-based origin (TODO: this requires that
-   we define a means of identification for content inside bundles).
+   display a URL from the content-based origin.
+
+   [[TODO: Again, this requires that we define a means of identification
+   for content inside bundles.]]
 
    A valid, final HTTP response that indicates anything other than a
-   server error (that is, 5xx status codes) without including the hash
-   pre-image in the response MUST be treated as a failed migration.
-   After a failed migration, information about the target origin SHOULD
-   be removed from interfaces related to the content-based origin,
-   except for diagnostic purposes.  The content-based origin can
-   continue to exist but further attempts to transfer state MUST
-   immediately fail.
+   server error (that is, 5xx status codes) or lack of authority (the
+   421 status code [HTTP2]) without including the hash pre-image in the
+   response MUST be treated as a failed migration.  After a failed
+   migration, information about the target origin SHOULD be removed from
+   interfaces related to the content-based origin, except for diagnostic
+   purposes.  The content-based origin MAY continue to exist but further
+   attempts to transfer state MUST immediately fail.
 
    After a valid HTTP response, the user agent navigates to the transfer
    target URL or any resource that was included in any redirections.
@@ -602,21 +611,19 @@ Internet-Draft            Content-Based Origins               March 2020
    associated with the content-based origin to be cleared as though
    clear-site-data were invoked [CLEAR-DATA].
 
+
+
+Thomson                 Expires 25 September 2020              [Page 11]
+
+Internet-Draft            Content-Based Origins               March 2020
+
+
 5.3.  Transfer Target
 
    To enable transfer, content MUST include an attribute that indicates
    the transfer target URL.  If a bundle could contain multiple
    potential entry points, each entry point for the bundle would
    separately specify a different transfer target URL.
-
-
-
-
-
-Thomson                 Expires 10 September 2020              [Page 11]
-
-Internet-Draft            Content-Based Origins               March 2020
-
 
    [[Intuitively, it seems prudent to limit transfer target URLs in the
    same bundle to the same origin, but I don't have a concrete reason
@@ -658,21 +665,19 @@ Internet-Draft            Content-Based Origins               March 2020
    content of that resource that describes what information was
    transferred.
 
+
+
+
+
+Thomson                 Expires 25 September 2020              [Page 12]
+
+Internet-Draft            Content-Based Origins               March 2020
+
+
    A user agent MAY request user permission to transfer some state.
    This might be conditioned on what state is being transferred.  For
    instance, a user agent might prompt before transferring permissions
    [PERMISSIONS]; see Section 5.4.3.
-
-
-
-
-
-
-
-Thomson                 Expires 10 September 2020              [Page 12]
-
-Internet-Draft            Content-Based Origins               March 2020
-
 
 5.4.1.  Transfer of Content
 
@@ -717,18 +722,16 @@ Internet-Draft            Content-Based Origins               March 2020
    origin from which they came.  If a database with the same name exists
    at the destination, a new name is selected.
 
-   The event that indicates transfer will list the databases that were
-   transferred, their names and any name changes.
 
 
 
-
-
-
-Thomson                 Expires 10 September 2020              [Page 13]
+Thomson                 Expires 25 September 2020              [Page 13]
 
 Internet-Draft            Content-Based Origins               March 2020
 
+
+   The event that indicates transfer will list the databases that were
+   transferred, their names and any name changes.
 
 5.4.3.  Transfer of Permissions
 
@@ -774,17 +777,17 @@ Internet-Draft            Content-Based Origins               March 2020
    been created within the bundle so the transfer of state can be
    skipped by the browser if navigation from a previously unused
    content-based origin is successful.  It is possible that the content-
-   based origin might have previously used, in which case state
-   transferrance might occur.
 
 
 
 
-
-Thomson                 Expires 10 September 2020              [Page 14]
+Thomson                 Expires 25 September 2020              [Page 14]
 
 Internet-Draft            Content-Based Origins               March 2020
 
+
+   based origin might have previously used, in which case state
+   transferrance might occur.
 
 5.6.  Communication Between Origins
 
@@ -831,17 +834,21 @@ Internet-Draft            Content-Based Origins               March 2020
               httpbis-semantics-07, 7 March 2020, <http://www.ietf.org/
               internet-drafts/draft-ietf-httpbis-semantics-07.txt>.
 
-   [NI]       Farrell, S., Kutscher, D., Dannewitz, C., Ohlman, B.,
-              Keranen, A., and P. Hallam-Baker, "Naming Things with
 
 
 
-
-Thomson                 Expires 10 September 2020              [Page 15]
+Thomson                 Expires 25 September 2020              [Page 15]
 
 Internet-Draft            Content-Based Origins               March 2020
 
 
+   [HTTP2]    Belshe, M., Peon, R., and M. Thomson, Ed., "Hypertext
+              Transfer Protocol Version 2 (HTTP/2)", RFC 7540,
+              DOI 10.17487/RFC7540, May 2015,
+              <https://www.rfc-editor.org/info/rfc7540>.
+
+   [NI]       Farrell, S., Kutscher, D., Dannewitz, C., Ohlman, B.,
+              Keranen, A., and P. Hallam-Baker, "Naming Things with
               Hashes", RFC 6920, DOI 10.17487/RFC6920, April 2013,
               <https://www.rfc-editor.org/info/rfc6920>.
 
@@ -858,11 +865,11 @@ Internet-Draft            Content-Based Origins               March 2020
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
-   [SH]       Nottingham, M. and P. Kamp, "Structured Headers for HTTP",
-              Work in Progress, Internet-Draft, draft-ietf-httpbis-
-              header-structure-14, 28 January 2020,
+   [SH]       Nottingham, M. and P. Kamp, "Structured Field Values for
+              HTTP", Work in Progress, Internet-Draft, draft-ietf-
+              httpbis-header-structure-17, 15 March 2020,
               <http://www.ietf.org/internet-drafts/draft-ietf-httpbis-
-              header-structure-14.txt>.
+              header-structure-17.txt>.
 
    [SXG]      Yasskin, J., "Signed HTTP Exchanges", Work in Progress,
               Internet-Draft, draft-yasskin-http-origin-signed-
@@ -878,25 +885,24 @@ Internet-Draft            Content-Based Origins               March 2020
 
    [DIGEST]   Polli, R. and L. Pardue, "Digest Headers", Work in
               Progress, Internet-Draft, draft-ietf-httpbis-digest-
-              headers-01, 3 November 2019, <http://www.ietf.org/
-              internet-drafts/draft-ietf-httpbis-digest-headers-01.txt>.
+              headers-02, 9 March 2020, <http://www.ietf.org/internet-
+              drafts/draft-ietf-httpbis-digest-headers-02.txt>.
 
    [HTML]     WhatWG, ., "HTML", WhatWG Living Standard, 4 March 2020,
               <https://html.spec.whatwg.org/>.
+
+
+
+Thomson                 Expires 25 September 2020              [Page 16]
+
+Internet-Draft            Content-Based Origins               March 2020
+
 
    [IF-DIGEST]
               Thomson, M., "Conditional HTTP Requests Using Digests",
               Work in Progress, Internet-Draft, draft-thomson-http-if-
               digest-00, 9 March 2020, <https://tools.ietf.org/html/
               draft-thomson-http-if-digest-00>.
-
-
-
-
-Thomson                 Expires 10 September 2020              [Page 16]
-
-Internet-Draft            Content-Based Origins               March 2020
-
 
    [INDEXEDDB]
               Alabbas, A. and J. Bell, "Indexed Database API 3.0",
@@ -939,20 +945,21 @@ Internet-Draft            Content-Based Origins               March 2020
               <https://github.com/WICG/webpackage/blob/master/
               explainers/navigation-to-unsigned-bundles.md>.
 
+
+
+
+
+Thomson                 Expires 25 September 2020              [Page 17]
+
+Internet-Draft            Content-Based Origins               March 2020
+
+
 Acknowledgments
 
    This work is hardly original, nor is it an individual effort.
    [[TODO: acknowledge.]]
 
 Author's Address
-
-
-
-
-Thomson                 Expires 10 September 2020              [Page 17]
-
-Internet-Draft            Content-Based Origins               March 2020
-
 
    Martin Thomson
    Mozilla
@@ -998,11 +1005,4 @@ Internet-Draft            Content-Based Origins               March 2020
 
 
 
-
-
-
-
-
-
-
-Thomson                 Expires 10 September 2020              [Page 18]
+Thomson                 Expires 25 September 2020              [Page 18]
