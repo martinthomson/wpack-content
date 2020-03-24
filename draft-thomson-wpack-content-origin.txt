@@ -31,12 +31,10 @@ Note to Readers
 
    Discussion of this document takes place on the WPACK Working Group
    mailing list (wpack@ietf.org), which is archived at
-   https://mailarchive.ietf.org/arch/browse/wpack/
-   (https://mailarchive.ietf.org/arch/browse/wpack/).
+   https://mailarchive.ietf.org/arch/browse/wpack/.
 
    Source for this draft and an issue tracker can be found at
-   https://github.com/martinthomson/wpack-content
-   (https://github.com/martinthomson/wpack-content).
+   https://github.com/martinthomson/wpack-content.
 
 Status of This Memo
 
@@ -50,6 +48,8 @@ Status of This Memo
 
    Internet-Drafts are draft documents valid for a maximum of six months
    and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
 
 
 
@@ -57,9 +57,6 @@ Thomson                 Expires 25 September 2020               [Page 1]
 
 Internet-Draft            Content-Based Origins               March 2020
 
-
-   time.  It is inappropriate to use Internet-Drafts as reference
-   material or to cite them other than as "work in progress."
 
    This Internet-Draft will expire on 25 September 2020.
 
@@ -106,6 +103,9 @@ Table of Contents
      8.2.  Informative References  . . . . . . . . . . . . . . . . .  16
    Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  18
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  18
+
+
+
 
 
 
