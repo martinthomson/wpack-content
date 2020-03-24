@@ -711,7 +711,7 @@ transferrance might occur.
 
 Without knowledge of the content of a resource, or bundle of resources, a
 content-based origin will be impossible to guess.  This means that communication
-is only possible if the frame in which the content is loaded by the origin
+is only possible if the frame containing the content is loaded by the origin
 attempting communication, or the content is known to that origin.
 
 
