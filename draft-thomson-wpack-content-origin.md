@@ -439,8 +439,8 @@ for content to be interpreted as valid for multiple content types and those
 could be attributed to the same content-based origin, that might be exploited by
 an attacker.  A sample policy might only allow web bundles and HTML files to be
 assigned a content-based origin; as the first bytes of these formats are
-unambiguously different, this ensures that the same content to be interpreted as
-valid for both content types.
+unambiguously different, this ensures that the same content cannot be
+interpreted as valid for both content types.
 
 
 ## Hash Agility {#hash-agility}
