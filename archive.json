@@ -1,0 +1,109 @@
+{
+  "magic": "B8n2c@e8kvfx",
+  "timestamp": "2020-04-09T04:31:45.382690+00:00",
+  "repo": "martinthomson/wpack-content",
+  "labels": [
+    {
+      "name": "bug",
+      "description": "Something isn't working",
+      "color": "d73a4a"
+    },
+    {
+      "name": "documentation",
+      "description": "Improvements or additions to documentation",
+      "color": "0075ca"
+    },
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "good first issue",
+      "description": "Good for newcomers",
+      "color": "7057ff"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    }
+  ],
+  "issues": [
+    {
+      "number": 1,
+      "id": "MDU6SXNzdWU1Nzk2NzY3NTM=",
+      "title": "Truncating Sec-Content-Origin hash in transfer requests",
+      "url": "https://github.com/martinthomson/wpack-content/issues/1",
+      "state": "OPEN",
+      "author": "martinthomson",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "This will complicate encoding, but it might reduce the entropy that is carried from the user agent to the target origin.  The server would then have to offer all of the options that match for the transfer to complete successfully.\r\n\r\nIt should be fairly easy to work out a number of bits that might disambiguate sufficiently.  Especially given that the transfer target URL scopes the request considerably.  If you were prepared to place more load on the URL, as little as a single octet could be enough to disambiguate multiple content versions.",
+      "createdAt": "2020-03-12T03:59:39Z",
+      "updatedAt": "2020-03-12T03:59:39Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 2,
+      "id": "MDU6SXNzdWU1ODY3MTM5NTc=",
+      "title": "Confusing statement in Communication Between Origins section",
+      "url": "https://github.com/martinthomson/wpack-content/issues/2",
+      "state": "CLOSED",
+      "author": "sideshowbarker",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "https://martinthomson.github.io/wpack-content/draft-thomson-wpack-content-origin.html#section-5.6\r\n\r\n> This means that communication is only possible if the frame in which the content is loaded by the origin attempting communication, or the content is known to that origin.\r\n\r\nA \u201cthen [*something*]\u201d expectation is created by the word *if* in the condition *if the frame in which the content is loaded by the origin attempting communication*, but there\u2019s no \u201csomething\u201d there.\r\n\r\nOr maybe the word *if* is a typo, and some other word was intended there?",
+      "createdAt": "2020-03-24T05:58:49Z",
+      "updatedAt": "2020-03-24T10:51:54Z",
+      "closedAt": "2020-03-24T10:51:54Z",
+      "comments": [
+        {
+          "author": "martinthomson",
+          "authorAssociation": "OWNER",
+          "body": "Thanks for reading.  This is clearly not my best work, but I think that the sentence is complete.\r\n\r\nThe \"then [something]\" consequence is \"communication is only possible\" with a condition being that the \"frame is loaded by the origin attempting communication, or ...\".",
+          "createdAt": "2020-03-24T10:31:08Z",
+          "updatedAt": "2020-03-24T10:31:08Z"
+        },
+        {
+          "author": "sideshowbarker",
+          "authorAssociation": "NONE",
+          "body": "Sorry, I think I\u2019m still failing to parse it. Lemme try some rewordings to see if I understand \u2014\r\n\r\n\u201cThis means that communication is only possible if the frame in which the content is *is* loaded by the origin attempting communication\u201d\r\n\r\n\u2026that is, add an additional \u201cis\u201d there.\r\n\r\nOr maybe this:\r\n\r\n\u201cThis means that communication is only possible if the frame *containing* the content is loaded by the origin attempting communication\u201d\r\n",
+          "createdAt": "2020-03-24T10:39:12Z",
+          "updatedAt": "2020-03-24T10:39:12Z"
+        },
+        {
+          "author": "martinthomson",
+          "authorAssociation": "OWNER",
+          "body": "Thanks, that helps a lot. I'll make the change you suggest.",
+          "createdAt": "2020-03-24T10:50:35Z",
+          "updatedAt": "2020-03-24T10:50:35Z"
+        }
+      ]
+    }
+  ],
+  "pulls": []
+}
